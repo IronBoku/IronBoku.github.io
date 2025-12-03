@@ -1,132 +1,263 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio Jenar Dipa Erlangga</title>
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #0d0d0d url('https://img.freepik.com/premium-photo/beautiful-geometric-abstract-digital-art-modern-colorful_636537-361676.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: #f0f0f0;
-      overflow-x: hidden;
-    }
-    header {
-      text-align: center;
-      padding: 50px 20px;
-      animation: fadeInDown 2s ease;
-    }
-    header img {
-      width: 150px;
-    }
-    header h1 {
-      font-size: 3em;
-      text-shadow: 2px 2px #000;
-      margin: 10px 0;
-    }
-    header p {
-      font-size: 1.2em;
-      color: #ccc;
-    }
-    section {
-      padding: 50px 20px;
-      text-align: center;
-      animation: fadeInUp 2s ease;
-      background: rgba(20,20,20,0.85);
-      margin: 20px;
-      border-radius: 15px;
-    }
-    section h2 {
-      color: #ff4747;
-      margin-bottom: 20px;
-    }
-    section img {
-      width: 250px;
-      border-radius: 15px;
-      box-shadow: 0 0 20px #ff4747;
-      transition: transform 0.3s ease;
-      margin: 10px;
-    }
-    section img:hover {
-      transform: scale(1.1) rotate(3deg);
-    }
-    .contact {
-      background: rgba(17,17,17,0.95);
-      padding: 50px 20px;
-      text-align: center;
-      animation: pulse 3s infinite;
-    }
-    .contact h2 {
-      color: #25D366;
-    }
-    .contact a {
-      display: inline-block;
-      padding: 15px 30px;
-      background: #25D366;
-      color: white;
-      text-decoration: none;
-      border-radius: 50px;
-      font-size: 1.2em;
-      transition: background 0.3s ease;
-    }
-    .contact a:hover {
-      background: #128C7E;
-    }
-    @keyframes fadeInDown {
-      from {opacity: 0; transform: translateY(-50px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-    @keyframes fadeInUp {
-      from {opacity: 0; transform: translateY(50px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-    @keyframes pulse {
-      0% {box-shadow: 0 0 10px #25D366;}
-      50% {box-shadow: 0 0 30px #25D366;}
-      100% {box-shadow: 0 0 10px #25D366;}
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jenar Dipa Erlangga | IronGaming54 / IronBoku</title>
+  <meta name="description" content="Portofolio ultra mega ultimate Jenar Dipa Erlangga (IronGaming54 / IronBoku). Gamer SMP Eksperimental Mangunan kelas 7 Nusa 3." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Roblox_Logo_2022.png" alt="Roblox Logo">
-    <h1>Jenar Dipa Erlangga</h1>
-    <p>Gamer | Kelas 7 Nusa 3 | SMP Eksperimental Mangunan</p>
+  <!-- Dekorasi latar neon dan partikel -->
+  <div class="bg-grid"></div>
+  <canvas id="particles"></canvas>
+
+  <!-- Header hero -->
+  <header class="hero" role="banner" aria-label="Hero utama">
+    <nav class="nav">
+      <a class="logo" href="#top" aria-label="Logo IronGaming54">IG54</a>
+      <button class="theme-toggle" aria-label="Ganti tema warna" title="Switch Theme">⚡</button>
+      <ul class="nav-links">
+        <li><a href="#profil">Profil</a></li>
+        <li><a href="#alias">Alias</a></li>
+        <li><a href="#game">Game</a></li>
+        <li><a href="#roblox">Roblox</a></li>
+        <li><a href="#galeri">Galeri</a></li>
+        <li><a href="#kontak">Kontak</a></li>
+      </ul>
+    </nav>
+
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1 class="title">
+          Jenar Dipa Erlangga
+          <span class="outline">IronGaming54 / IronBoku</span>
+        </h1>
+        <p class="subtitle">
+          Gamer • Pelajar SMP Eksperimental Mangunan • Kelas 7 Nusa 3
+        </p>
+        <p class="tagline">
+          Bukan content creator (belum!), tapi langkahnya sudah dimulai. Ini portofolio super duper ultra hyper mega giga ultimate!
+        </p>
+        <div class="hero-cta">
+          <a class="btn primary" href="#game">Lihat game favorit</a>
+          <a class="btn ghost" href="#kontak">Hubungi aku</a>
+        </div>
+      </div>
+      <div class="hero-art">
+        <!-- Ganti src dengan gambar kamu sendiri -->
+        <img src="assets/roblox_hero.png" alt="Hiasan Roblox bergaya neon" class="roblox-hero" />
+        <img src="assets/game_collage.png" alt="Kolase icon game yang dimainkan" class="game-collage" />
+      </div>
+    </div>
   </header>
 
-  <section>
-    <h2>Tentang Saya</h2>
-    <p>
-      Halo! Nama saya Jenar Dipa Erlangga, seorang gamer muda yang penuh semangat dari SMP Eksperimental Mangunan. 
-      Saya sangat menyukai Roblox karena di dalamnya saya bisa berkreasi, bertemu teman baru, dan menjelajahi dunia yang tak terbatas. 
-      Roblox bukan hanya permainan, tapi juga ruang untuk belajar, berimajinasi, dan berkolaborasi.
-    </p>
-    <img src="https://tr.rbxcdn.com/3e7f9f1f3f8d9c6f9a2b6f1b6a7c2f4d/420/420/Avatar/Png" alt="Avatar Roblox">
-  </section>
+  <main>
+    <!-- Profil -->
+    <section id="profil" class="section">
+      <h2>Profil</h2>
+      <div class="card grid-2">
+        <div>
+          <p>
+            Aku Jenar — gamer yang suka eksplor banyak dunia digital: dari Nintendo klasik sampai multiplayer yang heboh.
+            Fokusku sekarang tetap sekolah, sambil nambah skill desain dan pemrograman biar suatu hari jadi content creator beneran.
+          </p>
+          <ul class="list">
+            <li><strong>Sekolah:</strong> SMP Eksperimental Mangunan</li>
+            <li><strong>Kelas:</strong> 7 Nusa 3</li>
+            <li><strong>Kota:</strong> Daerah Istimewa Yogyakarta</li>
+          </ul>
+        </div>
+        <div class="profile-art">
+          <img src="assets/roblox_deco_1.png" alt="Dekorasi Roblox 1" />
+          <img src="assets/roblox_deco_2.png" alt="Dekorasi Roblox 2" />
+        </div>
+      </div>
+    </section>
 
-  <section>
-    <h2>Portofolio</h2>
-    <p>
-      Dalam perjalanan saya bermain Roblox, saya telah mencoba berbagai game mode mulai dari obby, roleplay, hingga simulator. 
-      Saya juga aktif membuat desain avatar unik yang mencerminkan gaya saya sendiri. 
-      Selain itu, saya sering bergabung dengan komunitas untuk berkompetisi dan berkolaborasi dalam event-event seru.
-    </p>
-    <p>
-      Beberapa pencapaian saya antara lain: menyelesaikan obby dengan tingkat kesulitan tinggi, membangun rumah virtual dengan detail kreatif, 
-      serta mengoleksi item-item langka yang membuat avatar saya semakin keren. 
-      Saya percaya bahwa setiap permainan adalah kesempatan untuk belajar dan berkembang.
-    </p>
-    <img src="https://static.wikia.nocookie.net/roblox/images/0/0d/Roblox_Gameplay.png" alt="Gameplay Roblox">
-    <img src="https://static.wikia.nocookie.net/roblox/images/4/4d/Roblox_Characters.png" alt="Roblox Characters">
-  </section>
+    <!-- Alias -->
+    <section id="alias" class="section">
+      <h2>Alias di dunia game</h2>
+      <div class="card">
+        <ul class="list two-col">
+          <li><strong>IronGaming54:</strong> Nama yang kupakai untuk vibe kompetitif dan grinding</li>
+          <li><strong>IronBoku:</strong> Nama alter buat eksplor, event, dan main santai</li>
+        </ul>
+        <p class="note">
+          Ini hanya nama samaran biar keren. Cita-citaku adalah menjadi content creator—pelan tapi pasti.
+        </p>
+      </div>
+    </section>
 
-  <div class="contact">
-    <h2>Hubungi Saya</h2>
-    <p>Jika ingin berdiskusi atau bermain bersama, jangan ragu untuk menghubungi saya melalui WhatsApp.</p>
-    <a href="https://wa.me/6281802756212" target="_blank">Chat via WhatsApp</a>
-  </div>
+    <!-- Game -->
+    <section id="game" class="section">
+      <h2>Game yang sering dimainkan</h2>
+      <div class="card">
+        <div class="chips">
+          <span class="chip">Super Mario</span>
+          <span class="chip">Plants vs. Zombies</span>
+          <span class="chip">Pou</span>
+          <span class="chip">Mobile Legends: Bang Bang</span>
+          <span class="chip">PKXD</span>
+          <span class="chip">XDRP</span>
+          <span class="chip">PKXD Runner</span>
+          <span class="chip">Stumble Guys</span>
+          <span class="chip">Minecraft</span>
+          <span class="chip">Roblox</span>
+          <span class="chip">dan banyak lagi…</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Roblox -->
+    <section id="roblox" class="section">
+      <h2>Roblox highlight</h2>
+      <div class="card grid-3">
+        <article class="game-card">
+          <img src="assets/roblox_dandys_world.png" alt="Dandy's World Roblox" />
+          <h3>Dandy's World</h3>
+          <p>Eksplorasi, misteri, dan tantangan yang bikin deg-degan.</p>
+        </article>
+        <article class="game-card">
+          <img src="assets/roblox_color_or_die.png" alt="Color or Die Roblox" />
+          <h3>Color or Die</h3>
+          <p>Sembunyi dengan cerdas, warnai strategi, jangan ketahuan!</p>
+        </article>
+        <article class="game-card">
+          <img src="assets/roblox_rainbow_friends.png" alt="Rainbow Friends Roblox" />
+          <h3>Rainbow Friends</h3>
+          <p>Survive teman warna-warni yang tidak selalu ramah.</p>
+        </article>
+        <article class="game-card">
+          <img src="assets/roblox_dragon_blox.png" alt="Dragon Blox Roblox" />
+          <h3>Dragon Blox</h3>
+          <p>Latih kekuatan, lawan boss, jadi yang terkuat.</p>
+        </article>
+        <article class="game-card">
+          <img src="assets/roblox_ping_arcade.png" alt="PING Arcade Roblox" />
+          <h3>PING Arcade</h3>
+          <p>Arcade vibes, skor tinggi, fun tanpa batas.</p>
+        </article>
+        <article class="game-card">
+          <img src="assets/roblox_fruit_slice_sim.png" alt="Fruit Slice Simulator Roblox" />
+          <h3>Fruit Slice Simulator</h3>
+          <p>Iris buah, upgrade, kejar leaderboard.</p>
+        </article>
+      </div>
+      <div class="decor-strip">
+        <img src="assets/roblox_banner.png" alt="Banner dekorasi Roblox" />
+      </div>
+    </section>
+
+    <!-- Galeri -->
+    <section id="galeri" class="section">
+      <h2>Galeri</h2>
+      <div class="gallery">
+        <figure class="shot">
+          <img src="assets/galeri_1.png" alt="Screenshot permainan favorit 1" />
+          <figcaption><strong>Highlight:</strong> Momen clutch di Stumble Guys</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="assets/galeri_2.png" alt="Screenshot permainan favorit 2" />
+          <figcaption><strong>Build:</strong> Base kreatif di Minecraft</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="assets/galeri_3.png" alt="Screenshot permainan favorit 3" />
+          <figcaption><strong>Event:</strong> Party di PKXD</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Kontak -->
+    <section id="kontak" class="section">
+      <h2>Kontak</h2>
+      <div class="card">
+        <p>
+          Ingin ngobrol, mabar, atau kolaborasi? Kirim pesan lewat form di bawah.
+        </p>
+        <form class="contact-form" action="#" method="post">
+          <div class="form-row">
+            <label for="nama">Nama</label>
+            <input id="nama" name="nama" type="text" placeholder="Nama kamu" required />
+          </div>
+          <div class="form-row">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="email@contoh.com" required />
+          </div>
+          <div class="form-row">
+            <label for="pesan">Pesan</label>
+            <textarea id="pesan" name="pesan" rows="4" placeholder="Tulis pesan di sini..." required></textarea>
+          </div>
+          <button class="btn primary" type="submit">Kirim</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p><strong>Jenar Dipa Erlangga</strong> • IronGaming54 / IronBoku</p>
+      <p class="small">© 2025. Dibuat dengan cinta gaming dan efek neon.</p>
+    </div>
+    <img class="footer-roblox" src="assets/roblox_footer_deco.png" alt="Dekorasi Roblox footer" />
+  </footer>
+
+  <!-- Script ringan untuk tema & partikel -->
+  <script>
+    // Toggle tema
+    document.querySelector('.theme-toggle').addEventListener('click', () => {
+      document.documentElement.classList.toggle('theme-alt');
+    });
+
+    // Partikel latar
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const colors = ['#00E5FF', '#9B5BFF', '#39FF14', '#FF3CAC'];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function spawn(n = 80) {
+      particles = [];
+      for (let i = 0; i < n; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 2 + 1,
+          c: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 0.6,
+          vy: (Math.random() - 0.5) * 0.6
+        });
+      }
+    }
+    spawn();
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.c;
+        ctx.globalAlpha = 0.8;
+        ctx.fill();
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
 </body>
 </html>
