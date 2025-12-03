@@ -1,14 +1,100 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Repository List</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Jenar Dipa Erlangga</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #ff0000, #000000);
+      color: white;
+      overflow-x: hidden;
+    }
+    header {
+      text-align: center;
+      padding: 50px 20px;
+      animation: fadeInDown 2s ease;
+    }
+    header h1 {
+      font-size: 3em;
+      text-shadow: 2px 2px #000;
+    }
+    header p {
+      font-size: 1.2em;
+    }
+    section {
+      padding: 50px 20px;
+      text-align: center;
+      animation: fadeInUp 2s ease;
+    }
+    section img {
+      width: 250px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px #fff;
+      transition: transform 0.3s ease;
+    }
+    section img:hover {
+      transform: scale(1.1) rotate(3deg);
+    }
+    .contact {
+      background: #111;
+      padding: 50px 20px;
+      text-align: center;
+      animation: pulse 3s infinite;
+    }
+    .contact a {
+      display: inline-block;
+      padding: 15px 30px;
+      background: #25D366;
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      font-size: 1.2em;
+      transition: background 0.3s ease;
+    }
+    .contact a:hover {
+      background: #128C7E;
+    }
+    @keyframes fadeInDown {
+      from {opacity: 0; transform: translateY(-50px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    @keyframes fadeInUp {
+      from {opacity: 0; transform: translateY(50px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    @keyframes pulse {
+      0% {box-shadow: 0 0 10px #25D366;}
+      50% {box-shadow: 0 0 30px #25D366;}
+      100% {box-shadow: 0 0 10px #25D366;}
+    }
+  </style>
 </head>
-
 <body>
-ini portofolionya jenar
-</body>
+  <header>
+    <h1>Jenar Dipa Erlangga</h1>
+    <p>Gamer | Kelas 7 Nusa 3 | SMP Eksperimental Mangunan</p>
+  </header>
 
+  <section>
+    <h2>Tentang Saya</h2>
+    <p>Saya sangat menyukai game Roblox dan sering bermain serta membuat pengalaman seru di dalamnya.</p>
+    <img src="roblox-theme.jpg" alt="Roblox Gamer">
+  </section>
+
+  <section>
+    <h2>Portofolio</h2>
+    <p>Berikut beberapa momen dan karya saya di Roblox:</p>
+    <img src="roblox-gameplay.jpg" alt="Gameplay Roblox">
+    <img src="roblox-avatar.jpg" alt="Avatar Roblox">
+  </section>
+
+  <div class="contact">
+    <h2>Hubungi Saya</h2>
+    <a href="https://wa.me/6281802756212" target="_blank">Chat via WhatsApp</a>
+  </div>
+</body>
 </html>
