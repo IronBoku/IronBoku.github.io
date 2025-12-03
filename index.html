@@ -3,261 +3,242 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jenar Dipa Erlangga | IronGaming54 / IronBoku</title>
-  <meta name="description" content="Portofolio ultra mega ultimate Jenar Dipa Erlangga (IronGaming54 / IronBoku). Gamer SMP Eksperimental Mangunan kelas 7 Nusa 3." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <title>Jenar Dipa Erlangga — Portofolio Futuristik</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <meta name="description" content="Portofolio futuristik Jenar Dipa Erlangga (IronGaming54 / IronBoku). Gamer SMP Eksperimental Mangunan, kelas 7 Nusa 3.">
 </head>
 <body>
-  <!-- Dekorasi latar neon dan partikel -->
-  <div class="bg-grid"></div>
+  <!-- Background layers -->
   <canvas id="particles"></canvas>
+  <div class="grid-bg"></div>
+  <div class="noise"></div>
 
-  <!-- Header hero -->
-  <header class="hero" role="banner" aria-label="Hero utama">
-    <nav class="nav">
-      <a class="logo" href="#top" aria-label="Logo IronGaming54">IG54</a>
-      <button class="theme-toggle" aria-label="Ganti tema warna" title="Switch Theme">⚡</button>
-      <ul class="nav-links">
-        <li><a href="#profil">Profil</a></li>
-        <li><a href="#alias">Alias</a></li>
-        <li><a href="#game">Game</a></li>
-        <li><a href="#roblox">Roblox</a></li>
-        <li><a href="#galeri">Galeri</a></li>
-        <li><a href="#kontak">Kontak</a></li>
-      </ul>
+  <!-- Navigation -->
+  <header class="nav">
+    <a href="#" class="logo glitch" data-text="IRONBOKU">IRONBOKU</a>
+    <nav class="menu">
+      <a href="#home">Beranda</a>
+      <a href="#about">Tentang</a>
+      <a href="#games">Game</a>
+      <a href="#roblox">Roblox</a>
+      <a href="#contact">Kontak</a>
     </nav>
-
-    <div class="hero-content">
-      <div class="hero-text">
-        <h1 class="title">
-          Jenar Dipa Erlangga
-          <span class="outline">IronGaming54 / IronBoku</span>
-        </h1>
-        <p class="subtitle">
-          Gamer • Pelajar SMP Eksperimental Mangunan • Kelas 7 Nusa 3
-        </p>
-        <p class="tagline">
-          Bukan content creator (belum!), tapi langkahnya sudah dimulai. Ini portofolio super duper ultra hyper mega giga ultimate!
-        </p>
-        <div class="hero-cta">
-          <a class="btn primary" href="#game">Lihat game favorit</a>
-          <a class="btn ghost" href="#kontak">Hubungi aku</a>
-        </div>
-      </div>
-      <div class="hero-art">
-        <!-- Ganti src dengan gambar kamu sendiri -->
-        <img src="assets/roblox_hero.png" alt="Hiasan Roblox bergaya neon" class="roblox-hero" />
-        <img src="assets/game_collage.png" alt="Kolase icon game yang dimainkan" class="game-collage" />
-      </div>
-    </div>
   </header>
 
-  <main>
-    <!-- Profil -->
-    <section id="profil" class="section">
-      <h2>Profil</h2>
-      <div class="card grid-2">
-        <div>
+  <!-- Hero -->
+  <section id="home" class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge">Futuristik • Realistik • Holografik</div>
+      <h1 class="title">
+        <span class="thin">Jenar Dipa Erlangga</span>
+        <span class="thick gradient">IronGaming54</span>
+        <span class="alias">aka <strong>IronBoku</strong></span>
+      </h1>
+      <p class="subtitle">
+        Gamer yang bercita-cita jadi content creator—meski sekarang belum. Pelajar di
+        <strong>SMP Eksperimental Mangunan</strong>, kelas <strong>7 Nusa 3</strong>.
+      </p>
+      <div class="cta-wrap">
+        <a href="#about" class="btn primary">Lihat Profil</a>
+        <a href="#games" class="btn ghost">Daftar Game</a>
+      </div>
+      <div class="hero-parallax">
+        <img src="images/roblox-1.png" alt="Hiasan Roblox 1" class="decor decor-1" />
+        <img src="images/roblox-2.png" alt="Hiasan Roblox 2" class="decor decor-2" />
+        <img src="images/rainbow-friends.png" alt="Rainbow Friends" class="decor decor-3" />
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="section glass">
+    <div class="container">
+      <h2 class="section-title">Tentang Jenar</h2>
+      <div class="about-grid">
+        <div class="card tilt">
+          <h3>Profil</h3>
           <p>
-            Aku Jenar — gamer yang suka eksplor banyak dunia digital: dari Nintendo klasik sampai multiplayer yang heboh.
-            Fokusku sekarang tetap sekolah, sambil nambah skill desain dan pemrograman biar suatu hari jadi content creator beneran.
+            Aku dikenal di dunia game dengan nama <strong>IronGaming54</strong> dan <strong>IronBoku</strong>.
+            Itu hanya nama samaran biar lebih keren, bukan content creator—setidaknya belum. Cita-citaku: jadi content creator yang autentik dan berkualitas.
           </p>
-          <ul class="list">
-            <li><strong>Sekolah:</strong> SMP Eksperimental Mangunan</li>
-            <li><strong>Kelas:</strong> 7 Nusa 3</li>
-            <li><strong>Kota:</strong> Daerah Istimewa Yogyakarta</li>
+          <ul class="meta">
+            <li><span>Nama:</span> Jenar Dipa Erlangga</li>
+            <li><span>Sekolah:</span> SMP Eksperimental Mangunan</li>
+            <li><span>Kelas:</span> 7 Nusa 3</li>
+            <li><span>Kota:</span> Daerah Istimewa Yogyakarta</li>
           </ul>
         </div>
-        <div class="profile-art">
-          <img src="assets/roblox_deco_1.png" alt="Dekorasi Roblox 1" />
-          <img src="assets/roblox_deco_2.png" alt="Dekorasi Roblox 2" />
+        <div class="card tilt">
+          <h3>Fokus</h3>
+          <p>
+            Gameplay, eksplorasi game, dan estetika UI/UX futuristik. Aku suka detail kecil—transisi halus, neon glow, dan kesan holografik yang terasa “nyata”.
+          </p>
+          <div class="tags">
+            <span class="tag">Neon</span>
+            <span class="tag">Holografik</span>
+            <span class="tag">Glassmorphism</span>
+            <span class="tag">Parallax</span>
+            <span class="tag">Micro-interactions</span>
+          </div>
         </div>
       </div>
-    </section>
-
-    <!-- Alias -->
-    <section id="alias" class="section">
-      <h2>Alias di dunia game</h2>
-      <div class="card">
-        <ul class="list two-col">
-          <li><strong>IronGaming54:</strong> Nama yang kupakai untuk vibe kompetitif dan grinding</li>
-          <li><strong>IronBoku:</strong> Nama alter buat eksplor, event, dan main santai</li>
-        </ul>
-        <p class="note">
-          Ini hanya nama samaran biar keren. Cita-citaku adalah menjadi content creator—pelan tapi pasti.
-        </p>
-      </div>
-    </section>
-
-    <!-- Game -->
-    <section id="game" class="section">
-      <h2>Game yang sering dimainkan</h2>
-      <div class="card">
-        <div class="chips">
-          <span class="chip">Super Mario</span>
-          <span class="chip">Plants vs. Zombies</span>
-          <span class="chip">Pou</span>
-          <span class="chip">Mobile Legends: Bang Bang</span>
-          <span class="chip">PKXD</span>
-          <span class="chip">XDRP</span>
-          <span class="chip">PKXD Runner</span>
-          <span class="chip">Stumble Guys</span>
-          <span class="chip">Minecraft</span>
-          <span class="chip">Roblox</span>
-          <span class="chip">dan banyak lagi…</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Roblox -->
-    <section id="roblox" class="section">
-      <h2>Roblox highlight</h2>
-      <div class="card grid-3">
-        <article class="game-card">
-          <img src="assets/roblox_dandys_world.png" alt="Dandy's World Roblox" />
-          <h3>Dandy's World</h3>
-          <p>Eksplorasi, misteri, dan tantangan yang bikin deg-degan.</p>
-        </article>
-        <article class="game-card">
-          <img src="assets/roblox_color_or_die.png" alt="Color or Die Roblox" />
-          <h3>Color or Die</h3>
-          <p>Sembunyi dengan cerdas, warnai strategi, jangan ketahuan!</p>
-        </article>
-        <article class="game-card">
-          <img src="assets/roblox_rainbow_friends.png" alt="Rainbow Friends Roblox" />
-          <h3>Rainbow Friends</h3>
-          <p>Survive teman warna-warni yang tidak selalu ramah.</p>
-        </article>
-        <article class="game-card">
-          <img src="assets/roblox_dragon_blox.png" alt="Dragon Blox Roblox" />
-          <h3>Dragon Blox</h3>
-          <p>Latih kekuatan, lawan boss, jadi yang terkuat.</p>
-        </article>
-        <article class="game-card">
-          <img src="assets/roblox_ping_arcade.png" alt="PING Arcade Roblox" />
-          <h3>PING Arcade</h3>
-          <p>Arcade vibes, skor tinggi, fun tanpa batas.</p>
-        </article>
-        <article class="game-card">
-          <img src="assets/roblox_fruit_slice_sim.png" alt="Fruit Slice Simulator Roblox" />
-          <h3>Fruit Slice Simulator</h3>
-          <p>Iris buah, upgrade, kejar leaderboard.</p>
-        </article>
-      </div>
-      <div class="decor-strip">
-        <img src="assets/roblox_banner.png" alt="Banner dekorasi Roblox" />
-      </div>
-    </section>
-
-    <!-- Galeri -->
-    <section id="galeri" class="section">
-      <h2>Galeri</h2>
-      <div class="gallery">
-        <figure class="shot">
-          <img src="assets/galeri_1.png" alt="Screenshot permainan favorit 1" />
-          <figcaption><strong>Highlight:</strong> Momen clutch di Stumble Guys</figcaption>
-        </figure>
-        <figure class="shot">
-          <img src="assets/galeri_2.png" alt="Screenshot permainan favorit 2" />
-          <figcaption><strong>Build:</strong> Base kreatif di Minecraft</figcaption>
-        </figure>
-        <figure class="shot">
-          <img src="assets/galeri_3.png" alt="Screenshot permainan favorit 3" />
-          <figcaption><strong>Event:</strong> Party di PKXD</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <!-- Kontak -->
-    <section id="kontak" class="section">
-      <h2>Kontak</h2>
-      <div class="card">
-        <p>
-          Ingin ngobrol, mabar, atau kolaborasi? Kirim pesan lewat form di bawah.
-        </p>
-        <form class="contact-form" action="#" method="post">
-          <div class="form-row">
-            <label for="nama">Nama</label>
-            <input id="nama" name="nama" type="text" placeholder="Nama kamu" required />
-          </div>
-          <div class="form-row">
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" placeholder="email@contoh.com" required />
-          </div>
-          <div class="form-row">
-            <label for="pesan">Pesan</label>
-            <textarea id="pesan" name="pesan" rows="4" placeholder="Tulis pesan di sini..." required></textarea>
-          </div>
-          <button class="btn primary" type="submit">Kirim</button>
-        </form>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="footer-inner">
-      <p><strong>Jenar Dipa Erlangga</strong> • IronGaming54 / IronBoku</p>
-      <p class="small">© 2025. Dibuat dengan cinta gaming dan efek neon.</p>
     </div>
-    <img class="footer-roblox" src="assets/roblox_footer_deco.png" alt="Dekorasi Roblox footer" />
+  </section>
+
+  <!-- Games -->
+  <section id="games" class="section">
+    <div class="container">
+      <h2 class="section-title">Game yang aku mainkan</h2>
+      <div class="badges">
+        <span class="badge">Super Mario</span>
+        <span class="badge">Plants vs. Zombies</span>
+        <span class="badge">Pou</span>
+        <span class="badge">Mobile Legends: Bang Bang</span>
+        <span class="badge">PKXD</span>
+        <span class="badge">XDRP</span>
+        <span class="badge">PKXD Runner</span>
+        <span class="badge">Stumble Guys</span>
+        <span class="badge">Minecraft</span>
+        <span class="badge">Roblox</span>
+        <span class="badge">Dan banyak lagi…</span>
+      </div>
+
+      <div class="cards-grid">
+        <article class="card tilt">
+          <h3>Eksplorasi Roblox</h3>
+          <p>
+            Aku udah main banyak game bagus di Roblox: Dandy's World, Color or Die, Rainbow Friends, Dragon Blox, Pong Arcade, Fruit Slice Simulator, dan masih banyak lagi.
+          </p>
+          <div class="card-media">
+            <img src="images/dandy-world.png" alt="Dandy's World" />
+            <img src="images/color-or-die.png" alt="Color or Die" />
+            <img src="images/dragon-blox.png" alt="Dragon Blox" />
+          </div>
+        </article>
+
+        <article class="card tilt">
+          <h3>Classic & Mobile</h3>
+          <p>
+            Dari klasik seperti Super Mario dan PVZ, sampai mobile kompetitif seperti MLBB—aku suka kombinasi nostalgia dan tantangan modern.
+          </p>
+          <div class="card-media">
+            <img src="images/super-mario.png" alt="Super Mario" />
+            <img src="images/pvz.png" alt="Plants vs. Zombies" />
+            <img src="images/mlbb.png" alt="Mobile Legends" />
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roblox Showcase -->
+  <section id="roblox" class="section glass">
+    <div class="container">
+      <h2 class="section-title">Showcase Roblox</h2>
+      <p class="section-desc">
+        Aksen visual Roblox untuk nuansa playful. Gambar-gambar ini hanya hiasan—silakan ganti dengan karya atau tangkapan layar milikmu.
+      </p>
+      <div class="showcase">
+        <figure class="item tilt">
+          <img src="images/roblox-3.png" alt="Hiasan Roblox 3" />
+          <figcaption>Rainbow Friends — vibe neon</figcaption>
+        </figure>
+        <figure class="item tilt">
+          <img src="images/roblox-4.png" alt="Hiasan Roblox 4" />
+          <figcaption>Color or Die — kontras tajam</figcaption>
+        </figure>
+        <figure class="item tilt">
+          <img src="images/roblox-5.png" alt="Hiasan Roblox 5" />
+          <figcaption>Dragon Blox — energi futuristik</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="section">
+    <div class="container">
+      <h2 class="section-title">Kontak</h2>
+      <p class="section-desc">
+        Belum jadi content creator, tapi selalu terbuka untuk kolaborasi seru. Kalau mau ngobrol atau main bareng, tinggal kirim pesan.
+      </p>
+      <form class="contact-form glass" action="#" method="post">
+        <div class="form-row">
+          <label>Nama</label>
+          <input type="text" name="name" placeholder="Nama lengkap" required />
+        </div>
+        <div class="form-row">
+          <label>Email</label>
+          <input type="email" name="email" placeholder="alamat@email.com" required />
+        </div>
+        <div class="form-row">
+          <label>Pesan</label>
+          <textarea name="message" placeholder="Tulis pesanmu di sini..." rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn primary">Kirim</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer glass">
+    <div class="container">
+      <p>© 2025 Jenar Dipa Erlangga — IronGaming54 / IronBoku. Semua hak dilindungi.</p>
+    </div>
   </footer>
 
-  <!-- Script ringan untuk tema & partikel -->
+  <!-- Minimal JS untuk partikel & tilt -->
   <script>
-    // Toggle tema
-    document.querySelector('.theme-toggle').addEventListener('click', () => {
-      document.documentElement.classList.toggle('theme-alt');
-    });
-
-    // Partikel latar
+    // Partikel sederhana
     const canvas = document.getElementById('particles');
     const ctx = canvas.getContext('2d');
-    let particles = [];
-    const colors = ['#00E5FF', '#9B5BFF', '#39FF14', '#FF3CAC'];
+    let w, h, particles;
 
     function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+      particles = Array.from({ length: 120 }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.6 + 0.4,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6
+      }));
     }
     window.addEventListener('resize', resize);
     resize();
 
-    function spawn(n = 80) {
-      particles = [];
-      for (let i = 0; i < n; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          r: Math.random() * 2 + 1,
-          c: colors[Math.floor(Math.random() * colors.length)],
-          vx: (Math.random() - 0.5) * 0.6,
-          vy: (Math.random() - 0.5) * 0.6
-        });
-      }
-    }
-    spawn();
-
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (const p of particles) {
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(140, 255, 255, 0.9)';
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = p.c;
-        ctx.globalAlpha = 0.8;
         ctx.fill();
-
-        p.x += p.vx;
-        p.y += p.vy;
-
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-      }
-      requestAnimationFrame(animate);
+      });
+      requestAnimationFrame(draw);
     }
-    animate();
+    draw();
+
+    // Tilt 3D hover
+    document.querySelectorAll('.tilt').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const rx = ((y / rect.height) - 0.5) * -8;
+        const ry = ((x / rect.width) - 0.5) * 8;
+        card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) translateZ(8px)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'rotateX(0) rotateY(0) translateZ(0)';
+      });
+    });
   </script>
 </body>
 </html>
