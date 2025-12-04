@@ -94,9 +94,7 @@ body {
   background: linear-gradient(180deg, rgba(18, 24, 34, 0.5), rgba(12, 16, 24, 0.3));
   backdrop-filter: blur(10px); border-radius: 999px; color: var(--muted);
 }
-.title {
-  margin: 18px 0 12px;
-}
+.title { margin: 18px 0 12px; }
 .title .thin {
   display: block; font-size: 18px; color: var(--muted); letter-spacing: 1px;
 }
@@ -133,7 +131,12 @@ body {
 
 /* Parallax hero decorations */
 .hero-parallax { position: relative; height: 220px; margin-top: 24px; perspective: 800px; }
-.decor { position: absolute; width: clamp(90px, 20vw, 180px); filter: drop-shadow(0 10px 20px rgba(0,0,0,0.45)) brightness(1.1); opacity: 0.9; }
+.decor {
+  position: absolute; width: clamp(90px, 20vw, 180px);
+  filter: brightness(1.1);
+  opacity: 0.9;
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
 .decor-1 { left: 6%; top: 10%; transform: translateZ(40px) rotateZ(-6deg); }
 .decor-2 { right: 10%; top: 16%; transform: translateZ(60px) rotateZ(4deg); }
 .decor-3 { left: 50%; top: 40%; transform: translate(-50%, -50%) translateZ(80px) scale(1.08); }
@@ -219,4 +222,108 @@ body {
   .about-grid, .cards-grid, .showcase { grid-template-columns: 1fr; }
   .hero-parallax { height: 180px; }
   .menu { display: none; } /* bisa diganti jadi burger menu jika perlu */
+}
+
+/* ========================= */
+/* Tambahan: Glow + Drop-Shadow */
+/* ========================= */
+.decor {
+  filter:
+    drop-shadow(0 0 12px rgba(90, 240, 255, 0.9))
+    drop-shadow(0 0 24px rgba(255, 0, 200, 0.6));
+}
+.decor:hover {
+  filter:
+    drop-shadow(0 0 16px rgba(90, 240, 255, 1))
+    drop-shadow(0 0 32px rgba(255, 0, 200, 0.8));
+}
+
+/* Tambahan glow untuk elemen teks khusus */
+.section-title {
+  text-shadow:
+    0 0 10px rgba(90, 240, 255, 0.5),
+    0 0 18px rgba(255, 123, 240, 0.25);
+}
+
+/* Opsional: glow ringan untuk tombol saat hover */
+.btn.primary:hover {
+  box-shadow:
+    0 12px 30px -12px rgba(90, 240, 255, 0.9),
+    0 0 24px rgba(255, 123, 240, 0.35);
+}
+
+/* ========================= */
+/* Tambahan: Preserve-3D */
+/* ========================= */
+
+/* Container 3D umum (pakai jika ingin kedalaman kuat pada sebuah area) */
+.scene {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* Kartu mendukung 3D sehingga child (pseudo-element) bisa menonjol */
+.card {
+  transform-style: preserve-3d;
+}
+
+/* Efek tilt 3D saat hover (ringan agar tidak mengganggu konten) */
+.card:hover {
+  transform: rotateY(10deg) rotateX(6deg) translateZ(12px);
+}
+
+/* Highlight specular pseudo-element untuk rasa “holografik” */
+.card::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  background:
+    linear-gradient(140deg, rgba(90, 240, 255, 0.12), transparent 40%),
+    radial-gradient(600px 240px at 80% 0%, rgba(255, 123, 240, 0.12), transparent 60%);
+  transform: translateZ(1px); /* muncul di atas permukaan kartu */
+}
+
+/* Showcase item juga bisa diberi kesan depth */
+.item {
+  transform-style: preserve-3d;
+}
+.item img {
+  transform: translateZ(6px);
+  filter: saturate(1.08) contrast(1.06);
+}
+
+/* Hero parallax sudah punya perspective, tambahkan depth pada dekor */
+.hero-parallax { transform-style: preserve-3d; }
+.decor-1 { transform: translateZ(40px) rotateZ(-6deg); }
+.decor-2 { transform: translateZ(60px) rotateZ(4deg); }
+.decor-3 { transform: translate(-50%, -50%) translateZ(80px) scale(1.08); }
+
+/* Interaksi halus pada hover untuk dekor agar terasa “hidup” */
+.decor:hover {
+  transform: translateZ(86px) scale(1.06);
+}
+
+/* ========================= */
+/* Kualitas hidup tambahan */
+/* ========================= */
+
+/* Transisi global ringan agar animasi terasa halus */
+a, .badge, .tag, .item, .card, .btn, .decor {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease, border-color 0.25s ease;
+}
+
+/* Focus state accessible */
+.btn:focus,
+.menu a:focus,
+input:focus, textarea:focus {
+  outline: 2px solid rgba(90, 240, 255, 0.6);
+  outline-offset: 2px;
+}
+
+/* Sedikit depth pada section glass */
+.glass {
+  box-shadow:
+    0 20px 60px -20px var(--shadow),
+    0 0 32px rgba(90, 240, 255, 0.15);
 }
