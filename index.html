@@ -157,6 +157,52 @@
     </div>
   </section>
 
+ <!-- Arcade Futuristik Ultra RTX -->
+  <section id="arcade" class="section glass">
+    <div class="container">
+      <h2 class="section-title">Arcade Futuristik — Ultra 3D RTX</h2>
+      <p class="section-desc">
+        Koleksi 7 game klasik versi super duper ultra hyper mega giga ultimate futuristik:
+        Snake, Breakout, Space Invaders, Pong vs CPU, Flappy Bird, Dino Runner, dan Doodle Jump.
+      </p>
+
+      <header class="topbar">
+        <div class="brand">IRONBOKU ARCADE</div>
+        <div class="controls">
+          <label class="picker-label">Pilih Game:</label>
+          <select id="gamePicker" class="picker">
+            <option value="snake">Google Snake (Ultra 3D RTX)</option>
+            <option value="breakout">Breakout (Ultra 3D RTX)</option>
+            <option value="invaders">Space Invaders (Ultra 3D RTX)</option>
+            <option value="pong">Pong vs CPU (Ultra 3D RTX)</option>
+            <option value="flappy">Flappy Bird (Ultra 3D RTX)</option>
+            <option value="dino">Google Dinosaur (Ultra 3D RTX)</option>
+            <option value="doodle">Doodle Jump (Ultra 3D RTX)</option>
+          </select>
+          <button id="restartBtn" class="btn primary">Restart</button>
+          <button id="pauseBtn" class="btn ghost">Pause</button>
+        </div>
+      </header>
+
+      <main class="stage glass">
+        <canvas id="arc" width="960" height="540" aria-label="Arcade canvas"></canvas>
+        <div class="hud">
+          <div class="stat"><strong>Skor:</strong> <span id="score">0</span></div>
+          <div class="stat"><strong>Best:</strong> <span id="best">0</span></div>
+          <div class="stat"><strong>Status:</strong> <span id="status">Main</span></div>
+        </div>
+        <div class="help">
+          <p><strong>Kontrol umum:</strong> Panah/WASD, Space = aksi / start. P = pause.</p>
+          <p><strong>Snake:</strong> Panah/WASD. <strong>Breakout:</strong> Panah kiri/kanan. 
+             <strong>Invaders:</strong> Kiri/Kanan + Space tembak. 
+             <strong>Pong:</strong> Panah atas/bawah. 
+             <strong>Flappy/Dino:</strong> Space/Up untuk lompat. 
+             <strong>Doodle:</strong> Panah kiri/kanan.</p>
+        </div>
+      </main>
+    </div>
+  </section>
+  
   <!-- Contact -->
   <section id="contact" class="section">
     <div class="container">
