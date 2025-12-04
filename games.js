@@ -482,7 +482,8 @@
   })();
 
   // Switcher
-  const games = { snake, breakout, invaders, pong, flappy, dino, doodle };
+  const games = { snake, breakout, invaders, pong, flappy, dino, doodle, pacman, commander, mario, excitecar, dkong, dkjr, dk3,
+     wrecking, tetris, drmario, yoshi, ycookie };
   let current = games[document.getElementById('gamePicker').value];
   function switchGame(name){
     current = games[name]; current.reset(); updateHUD();
