@@ -480,31 +480,612 @@
     g.action=()=>{ paused=false; };
     return g;
   })();
+  
+  // ===== 8) Pac-Man =====
+const pacman = (() => {
+  const g = makeBase(); g.bestKey = 'best_pacman';
+  let W,H, player, ghosts = [], pellets = [], speed = 3;
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    player = { x: W/2, y: H/2, r: 10, vx:0, vy:0 };
+    pellets = [];
+    for(let x=40;x<W-40;x+=24){ for(let y=40;y<H-40;y+=24){ pellets.push({x,y,eaten:false}); } }
+    // 4 hantu sederhana
+    ghosts = [
+      { x: 100, y: 100, vx: 2, vy: 2, color: 'rgba(255,123,240,0.9)' },
+      { x: W-100, y: 100, vx: -2, vy: 2, color: 'rgba(90,240,255,0.9)' },
+      { x: 100, y: H-100, vx: 2, vy: -2, color: 'rgba(230,246,255,0.95)' },
+      { x: W-100, y: H-100, vx: -2, vy: -2, color: 'rgba(255,180,80,0.9)' }
+    ];
+  };
+  g.update = dt => {
+    if (paused) return;
+    player.vx = (keys.has('ArrowLeft')||keys.has('KeyA')) ? -speed : (keys.has('ArrowRight')||keys.has('KeyD')) ? speed : 0;
+    player.vy = (keys.has('ArrowUp')||keys.has('KeyW')) ? -speed : (keys.has('ArrowDown')||keys.has('KeyS')) ? speed : 0;
+    player.x = Math.max(20, Math.min(W-20, player.x + player.vx));
+    player.y = Math.max(20, Math.min(H-20, player.y + player.vy));
+    pellets.forEach(p=>{
+      if(!p.eaten && Math.hypot(player.x-p.x, player.y-p.y) < 12){ p.eaten = true; g.score += 1; }
+    });
+    ghosts.forEach(gh=>{
+      gh.x += gh.vx; gh.y += gh.vy;
+      if (gh.x < 20 || gh.x > W-20) gh.vx *= -1;
+      if (gh.y < 20 || gh.y > H-20) gh.vy *= -1;
+      if (Math.hypot(player.x - gh.x, player.y - gh.y) < 18){
+        paused = true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score));
+      }
+    });
+  };
+  g.draw = () => {
+    clearBG();
+    neonText('PAC-MAN — Ultra 3D RTX', W/2, 24, 18);
+    pellets.forEach(p=>{
+      if(!p.eaten){
+        ctx.save(); ctx.shadowColor='rgba(90,240,255,0.8)'; ctx.shadowBlur=8;
+        ctx.fillStyle='rgba(230,246,255,0.95)'; ctx.beginPath();
+        ctx.arc(Math.floor(p.x)+0.5, Math.floor(p.y)+0.5, 3, 0, Math.PI*2); ctx.fill(); ctx.restore();
+      }
+    });
+    ctx.save(); ctx.shadowColor='rgba(255,255,0,0.9)'; ctx.shadowBlur=16;
+    ctx.fillStyle='yellow'; ctx.beginPath();
+    ctx.arc(Math.floor(player.x)+0.5, Math.floor(player.y)+0.5, player.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    ghosts.forEach(gh=>{
+      ctx.save(); ctx.shadowColor=gh.color; ctx.shadowBlur=16;
+      ctx.fillStyle=gh.color; ctx.beginPath();
+      ctx.arc(Math.floor(gh.x)+0.5, Math.floor(gh.y)+0.5, 12, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    });
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
 
-  // Switcher
-  const games = { snake, breakout, invaders, pong, flappy, dino, doodle, pacman, commander, mario, excitecar, dkong, dkjr, dk3,
+// ===== 9) Commander (side-scrolling shooter) =====
+const commander = (() => {
+  const g = makeBase(); g.bestKey='best_commander';
+  let W,H, ship, bullets=[], foes=[], speed=2.4, cooldown=0, spawnT=0;
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    ship = { x: 80, y: H/2, w: 28, h: 16, vy:0 };
+    bullets=[]; foes=[]; cooldown=0; spawnT=0;
+  };
+  g.update = dt => {
+    if (paused) return;
+    ship.vy = (keys.has('ArrowUp')||keys.has('KeyW')) ? -4 : (keys.has('ArrowDown')||keys.has('KeyS')) ? 4 : 0;
+    ship.y = Math.max(20, Math.min(H-20, ship.y + ship.vy));
+
+    cooldown = Math.max(0, cooldown - dt);
+    if ((keys.has('Space')||keys.has('KeyX')) && cooldown === 0){
+      bullets.push({ x: ship.x + ship.w, y: ship.y, vx: 8 });
+      cooldown = 0.12;
+    }
+    bullets.forEach(b=> b.x += b.vx);
+    bullets = bullets.filter(b => b.x < W + 20);
+
+    spawnT += dt;
+    if (spawnT > 0.6){ spawnT = 0; foes.push({ x: W + 20, y: 40 + Math.random()*(H-80), w: 24, h: 18, vx: -speed }); }
+    foes.forEach(f=> f.x += f.vx);
+    foes = foes.filter(f=> f.x > -30);
+
+    bullets.forEach(b=>{
+      foes.forEach(f=>{
+        if (b.x > f.x && b.x < f.x + f.w && b.y > f.y && b.y < f.y + f.h){
+          f.x = -999; b.x = W + 999; g.score += 5;
+        }
+      });
+    });
+
+    foes.forEach(f=>{
+      if (ship.x < f.x + f.w && ship.x + ship.w > f.x && ship.y < f.y + f.h && ship.y + ship.h > f.y){
+        paused = true; statusEl.textContent = 'Game Over'; g.setBest(Math.max(g.best(), g.score));
+      }
+    });
+  };
+  g.draw = () => {
+    clearBG();
+    neonText('COMMANDER — Ultra 3D RTX', W/2, 24, 18);
+    neonRect(ship.x, ship.y - ship.h/2, ship.w, ship.h, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+    bullets.forEach(b=> neonRect(b.x-3, b.y-2, 6, 4, 'rgba(230,246,255,0.9)','rgba(230,246,255,0.95)'));
+    foes.forEach(f=> neonRect(f.x, f.y, f.w, f.h, 'rgba(90,240,255,0.85)','rgba(90,240,255,0.95)'));
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// ===== 10) Mario Bros. Arcade (single-screen platformer) =====
+const mario = (() => {
+  const g = makeBase(); g.bestKey='best_mario';
+  let W,H, player, platforms=[], enemies=[];
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    player = { x: W/2, y: H-60, w: 18, h: 22, vy:0, onGround:false };
+    platforms = [
+      { x: 40, y: H-40, w: W-80, h: 10 },
+      { x: 60, y: H-120, w: W-120, h: 10 },
+      { x: 80, y: H-200, w: W-160, h: 10 }
+    ];
+    enemies = [{ x: 80, y: H-60, w: 18, h: 18, vx: 1.2 }];
+  };
+  g.update = dt => {
+    if (paused) return;
+    const left = keys.has('ArrowLeft')||keys.has('KeyA');
+    const right = keys.has('ArrowRight')||keys.has('KeyD');
+    const jump = (keys.has('Space')||keys.has('ArrowUp')||keys.has('KeyW')) && player.onGround;
+    if (left) player.x -= 2.6;
+    if (right) player.x += 2.6;
+    if (jump) player.vy = -7.8;
+    player.vy += 0.45; player.y += player.vy;
+    player.onGround = false;
+
+    platforms.forEach(p=>{
+      if (player.x + player.w > p.x && player.x < p.x + p.w && player.y + player.h > p.y && player.y + player.h < p.y + 12 && player.vy > 0){
+        player.y = p.y - player.h; player.vy = 0; player.onGround = true;
+      }
+    });
+    player.x = Math.max(20, Math.min(W-20, player.x));
+    if (player.y > H+60){ paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score)); }
+
+    enemies.forEach(e=>{
+      e.x += e.vx; if (e.x < 40 || e.x > W-40) e.vx *= -1;
+      const hit = !(player.x + player.w < e.x || player.x > e.x + e.w || player.y + player.h < e.y || player.y > e.y + e.h);
+      if (hit){ paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score)); }
+    });
+    g.score += dt * 10;
+  };
+  g.draw = () => {
+    clearBG(); neonText('MARIO BROS — Ultra 3D RTX', W/2, 24, 18);
+    platforms.forEach(p=> neonRect(p.x, p.y, p.w, p.h, 'rgba(90,240,255,0.85)','rgba(90,240,255,0.95)'));
+    neonRect(player.x, player.y, player.w, player.h, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+    enemies.forEach(e=> neonRect(e.x, e.y, e.w, e.h));
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// ===== 11) Excitecar (endless car runner) =====
+const excitecar = (() => {
+  const g = makeBase(); g.bestKey='best_excitecar';
+  let W,H, car, obs=[], speed=4, laneW;
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR; laneW = W/4;
+    car = { lane: 2, y: H-90, w: laneW*0.5, h: 28 };
+    obs = [];
+    for(let i=0;i<4;i++) spawn(W + i*220);
+  };
+  function spawn(x){
+    obs.push({ x, lane: 1 + Math.floor(Math.random()*3), w: laneW*0.5, h: 26, y: 80 });
+  }
+  g.update = dt => {
+    if (paused) return;
+    if ((keys.has('ArrowLeft')||keys.has('KeyA')) && car.lane > 1) car.lane--;
+    if ((keys.has('ArrowRight')||keys.has('KeyD')) && car.lane < 3) car.lane++;
+    const carX = car.lane * laneW - laneW/2 - car.w/2;
+
+    obs.forEach(o=> o.x -= speed);
+    if (obs.length && obs[0].x + car.w < 0){ obs.shift(); spawn(W + 240); g.score++; }
+
+    obs.forEach(o=>{
+      const ox = o.lane * laneW - laneW/2 - o.w/2;
+      const collide = !(carX + car.w < o.x || carX > o.x + o.w || car.y + car.h < o.y || car.y > o.y + o.h);
+      if (collide){ paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score)); }
+    });
+
+    car._x = carX;
+  };
+  g.draw = () => {
+    clearBG(); neonText('EXCITECAR — Ultra 3D RTX', W/2, 24, 18);
+    for(let i=1;i<4;i++) line(i*laneW, 60, i*laneW, H, 'rgba(90,240,255,0.25)');
+    neonRect(car._x, car.y, car.w, car.h, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+    obs.forEach(o=>{
+      const ox = o.lane * laneW - laneW/2 - o.w/2;
+      neonRect(ox, o.y, o.w, o.h);
+    });
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// ===== 12) Donkey Kong =====
+const dkong = (() => {
+  const g = makeBase(); g.bestKey='best_dkong';
+  let W,H, p, platforms=[], barrels=[];
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    p = { x: 60, y: H-80, w: 18, h: 20, vy:0, on:false };
+    platforms = [
+      { x: 30, y: H-40, w: W-60, h: 8 },
+      { x: 50, y: H-120, w: W-100, h: 8 },
+      { x: 30, y: H-200, w: W-60, h: 8 }
+    ];
+    barrels = [];
+  };
+  g.update = dt => {
+    if (paused) return;
+    if (Math.random() < 0.02) barrels.push({ x: W - 60, y: H-200, r: 10, vx: -2.2, vy: 0.3 });
+    const left = keys.has('ArrowLeft')||keys.has('KeyA');
+    const right = keys.has('ArrowRight')||keys.has('KeyD');
+    const jump = (keys.has('Space')||keys.has('ArrowUp')||keys.has('KeyW')) && p.on;
+    if (left) p.x -= 2.4;
+    if (right) p.x += 2.4;
+    if (jump) p.vy = -7.8;
+    p.vy += 0.46; p.y += p.vy; p.on = false;
+    platforms.forEach(pl=>{
+      if (p.x + p.w > pl.x && p.x < pl.x + pl.w && p.y + p.h > pl.y && p.y + p.h <= pl.y + 12 && p.vy > 0){
+        p.y = pl.y - p.h; p.vy = 0; p.on = true;
+      }
+    });
+    barrels.forEach(b=>{ b.x += b.vx; b.y += b.vy; });
+    barrels = barrels.filter(b=> b.x > -20 && b.y < H+20);
+    barrels.forEach(b=>{
+      const hit = !(p.x + p.w < b.x - b.r || p.x > b.x + b.r || p.y + p.h < b.y - b.r || p.y > b.y + b.r);
+      if (hit){ paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score)); }
+    });
+    g.score += dt * 8;
+  };
+  g.draw = () => {
+    clearBG(); neonText('DONKEY KONG — Ultra 3D RTX', W/2, 24, 18);
+    platforms.forEach(pl=> neonRect(pl.x, pl.y, pl.w, pl.h, 'rgba(90,240,255,0.85)','rgba(90,240,255,0.95)'));
+    neonRect(p.x, p.y, p.w, p.h, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+    barrels.forEach(b=>{
+      ctx.save(); ctx.shadowColor='rgba(230,246,255,0.95)'; ctx.shadowBlur=14;
+      ctx.fillStyle='rgba(230,246,255,0.95)'; ctx.beginPath();
+      ctx.arc(Math.floor(b.x)+0.5, Math.floor(b.y)+0.5, b.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    });
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// ===== 13) Donkey Kong Jr. =====
+const dkjr = (() => {
+  const g = makeBase(); g.bestKey='best_dkjr';
+  let W,H, p, vines=[], foes=[];
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    p = { x: W/2, y: H-80, w: 18, h: 20, vy:0 };
+    vines = [{ x: W/3, y: 80, h: H-160 }, { x: 2*W/3, y: 60, h: H-140 }];
+    foes = [];
+  };
+  g.update = dt => {
+    if (paused) return;
+    if (keys.has('ArrowLeft')||keys.has('KeyA')) p.x -= 2.2;
+    if (keys.has('ArrowRight')||keys.has('KeyD')) p.x += 2.2;
+    if (keys.has('ArrowUp')||keys.has('KeyW')) p.y -= 2.2;
+    if (keys.has('ArrowDown')||keys.has('KeyS')) p.y += 2.2;
+    p.x = Math.max(20, Math.min(W-20, p.x)); p.y = Math.max(40, Math.min(H-40, p.y));
+    if (Math.random() < 0.02) foes.push({ x: Math.random()*W, y: 80, vy: 2.4 });
+    foes.forEach(f=> f.y += f.vy);
+    foes = foes.filter(f=> f.y < H+20);
+    foes.forEach(f=>{
+      const hit = !(p.x + p.w < f.x || p.x > f.x + 10 || p.y + p.h < f.y || p.y > f.y + 10);
+      if (hit){ paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score)); }
+    });
+    g.score += dt * 9;
+  };
+  g.draw = () => {
+    clearBG(); neonText('DONKEY KONG JR — Ultra 3D RTX', W/2, 24, 18);
+    vines.forEach(v=> line(v.x, v.y, v.x, v.y + v.h, 'rgba(90,240,255,0.6)'));
+    neonRect(p.x, p.y, p.w, p.h, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+    foes.forEach(f=> neonRect(f.x, f.y, 10, 10));
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// ===== 14) Donkey Kong 3 (bug spray arena) =====
+const dk3 = (() => {
+  const g = makeBase(); g.bestKey='best_dk3';
+  let W,H, player, bugs=[];
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    player = { x: W/2 - 16, y: H - 50, w: 32, h: 12 };
+    bugs = [];
+  };
+  g.update = dt => {
+    if (paused) return;
+    if (keys.has('ArrowLeft')||keys.has('KeyA')) player.x -= 3.2;
+    if (keys.has('ArrowRight')||keys.has('KeyD')) player.x += 3.2;
+    player.x = Math.max(20, Math.min(W-52, player.x));
+    if (Math.random() < 0.04) bugs.push({ x: Math.random()*W, y: 40, vy: 2 + Math.random()*1.2 });
+    bugs.forEach(b=> b.y += b.vy);
+    bugs.forEach(b=>{
+      const hit = !(player.x + player.w < b.x || player.x > b.x + 14 || player.y + player.h < b.y || player.y > b.y + 14);
+      if (hit){ paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score)); }
+    });
+    bugs = bugs.filter(b=> b.y < H+20);
+    g.score += dt * 12;
+  };
+  g.draw = () => {
+    clearBG(); neonText('DONKEY KONG 3 — Ultra 3D RTX', W/2, 24, 18);
+    neonRect(player.x, player.y, player.w, player.h, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+    bugs.forEach(b=> neonRect(b.x, b.y, 14, 14));
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// ===== 15) Wrecking Crew (block puzzle) =====
+const wrecking = (() => {
+  const g = makeBase(); g.bestKey='best_wrecking';
+  let W,H, hammer, blocks=[];
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    hammer = { x: W/2, y: H-80, w: 18, h: 18 };
+    blocks = [];
+    for(let x=40;x<W-40;x+=60){ for(let y=60;y<H-140;y+=40){ blocks.push({ x, y, w: 40, h: 20, alive:true }); } }
+  };
+  g.update = dt => {
+    if (paused) return;
+    if (keys.has('ArrowLeft')||keys.has('KeyA')) hammer.x -= 3;
+    if (keys.has('ArrowRight')||keys.has('KeyD')) hammer.x += 3;
+    if (keys.has('ArrowUp')||keys.has('KeyW')) hammer.y -= 3;
+    if (keys.has('ArrowDown')||keys.has('KeyS')) hammer.y += 3;
+    hammer.x = Math.max(20, Math.min(W-20, hammer.x));
+    hammer.y = Math.max(40, Math.min(H-40, hammer.y));
+    blocks.forEach(b=>{
+      if(b.alive && hammer.x > b.x && hammer.x < b.x + b.w && hammer.y > b.y && hammer.y < b.y + b.h){
+        b.alive = false; g.score += 2;
+      }
+    });
+  };
+  g.draw = () => {
+    clearBG(); neonText('WRECKING CREW — Ultra 3D RTX', W/2, 24, 18);
+    neonRect(hammer.x - hammer.w/2, hammer.y - hammer.h/2, hammer.w, hammer.h, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+    blocks.forEach(b=>{ if(b.alive) neonRect(b.x, b.y, b.w, b.h); });
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// ===== 16) Tetris =====
+const tetris = (() => {
+  const g = makeBase(); g.bestKey='best_tetris';
+  let W,H, grid=[], cols=10, rows=20, cell=22, piece=null, fall=0, speed=0.6;
+  const shapes = [
+    [[1,1,1,1]], // I
+    [[1,1],[1,1]], // O
+    [[0,1,0],[1,1,1]], // T
+    [[1,1,0],[0,1,1]], // S
+    [[0,1,1],[1,1,0]], // Z
+    [[1,0,0],[1,1,1]], // J
+    [[0,0,1],[1,1,1]]  // L
+  ];
+  function newPiece(){
+    const s = shapes[Math.floor(Math.random()*shapes.length)];
+    piece = { x: Math.floor(cols/2)-1, y: 0, shape: s };
+  }
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    grid = Array.from({length: rows}, () => Array(cols).fill(0));
+    newPiece(); fall = 0;
+  };
+  function collide(px,py,shape){
+    for(let y=0;y<shape.length;y++){
+      for(let x=0;x<shape[y].length;x++){
+        if(shape[y][x] && (py+y>=rows || px+x<0 || px+x>=cols || grid[py+y][px+x])) return true;
+      }
+    }
+    return false;
+  }
+  function merge(px,py,shape){
+    for(let y=0;y<shape.length;y++) for(let x=0;x<shape[y].length;x++){
+      if(shape[y][x]) grid[py+y][px+x] = 1;
+    }
+  }
+  g.update = dt => {
+    if (paused) return;
+    fall += dt;
+    const left = keys.has('ArrowLeft')||keys.has('KeyA');
+    const right = keys.has('ArrowRight')||keys.has('KeyD');
+    const down = keys.has('ArrowDown')||keys.has('KeyS');
+    if (left && !collide(piece.x-1, piece.y, piece.shape)) piece.x--;
+    if (right && !collide(piece.x+1, piece.y, piece.shape)) piece.x++;
+    if (down) fall += 0.2;
+
+    if (fall > speed){
+      fall = 0;
+      if (!collide(piece.x, piece.y+1, piece.shape)) piece.y++;
+      else {
+        merge(piece.x, piece.y, piece.shape);
+        // clear lines
+        for(let y=rows-1;y>=0;y--){
+          if(grid[y].every(v => v)){
+            grid.splice(y,1); grid.unshift(Array(cols).fill(0)); g.score += 10;
+            y++;
+          }
+        }
+        newPiece();
+        if (collide(piece.x, piece.y, piece.shape)){
+          paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score));
+        }
+      }
+    }
+  };
+  g.draw = () => {
+    clearBG(); neonText('TETRIS — Ultra 3D RTX', W/2, 24, 18);
+    const ox = (W - cols*cell)/2, oy = 50;
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+      if(grid[y][x]) neonRect(ox + x*cell, oy + y*cell, cell-2, cell-2);
+    }
+    for(let y=0;y<piece.shape.length;y++) for(let x=0;x<piece.shape[y].length;x++){
+      if(piece.shape[y][x]) neonRect(ox + (piece.x+x)*cell, oy + (piece.y+y)*cell, cell-2, cell-2, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+    }
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// ===== 17) Dr. Mario (capsule match) =====
+const drmario = (() => {
+  const g = makeBase(); g.bestKey='best_drmario';
+  let W,H, grid=[], cols=8, rows=16, cell=24, capsule=null, fall=0, speed=0.7;
+  function newCapsule(){ capsule = { x: Math.floor(cols/2)-1, y: 0, parts: [[1,1]] }; }
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    grid = Array.from({length: rows}, () => Array(cols).fill(0));
+    newCapsule(); fall = 0;
+  };
+  function collide(px,py,parts){
+    for(let y=0;y<parts.length;y++) for(let x=0;x<parts[y].length;x++){
+      if(parts[y][x] && (py+y>=rows || px+x<0 || px+x>=cols || grid[py+y][px+x])) return true;
+    }
+    return false;
+  }
+  function merge(px,py,parts){
+    for(let y=0;y<parts.length;y++) for(let x=0;x<parts[y].length;x++){
+      if(parts[y][x]) grid[py+y][px+x] = 1;
+    }
+  }
+  g.update = dt => {
+    if (paused) return;
+    fall += dt;
+    if ((keys.has('ArrowLeft')||keys.has('KeyA')) && !collide(capsule.x-1, capsule.y, capsule.parts)) capsule.x--;
+    if ((keys.has('ArrowRight')||keys.has('KeyD')) && !collide(capsule.x+1, capsule.y, capsule.parts)) capsule.x++;
+    if (keys.has('ArrowUp')||keys.has('KeyW')) capsule.parts = [[1],[1]]; // rotate simple
+    if (keys.has('ArrowDown')||keys.has('KeyS')) fall += 0.25;
+
+    if (fall > speed){
+      fall = 0;
+      if (!collide(capsule.x, capsule.y+1, capsule.parts)) capsule.y++;
+      else {
+        merge(capsule.x, capsule.y, capsule.parts);
+        // simple clear: remove any 3 in a row (demo)
+        for(let y=0;y<rows;y++){
+          for(let x=0;x<cols-2;x++){
+            if(grid[y][x]&&grid[y][x+1]&&grid[y][x+2]){ grid[y][x]=grid[y][x+1]=grid[y][x+2]=0; g.score+=6; }
+          }
+        }
+        newCapsule();
+        if (collide(capsule.x, capsule.y, capsule.parts)){
+          paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score));
+        }
+      }
+    }
+  };
+  g.draw = () => {
+    clearBG(); neonText('DR. MARIO — Ultra 3D RTX', W/2, 24, 18);
+    const ox = (W - cols*cell)/2, oy = 50;
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+      if(grid[y][x]) neonRect(ox + x*cell, oy + y*cell, cell-3, cell-3);
+    }
+    for(let y=0;y<capsule.parts.length;y++) for(let x=0;x<capsule.parts[y].length;x++){
+      if(capsule.parts[y][x]) neonRect(ox + (capsule.x+x)*cell, oy + (capsule.y+y)*cell, cell-3, cell-3, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+    }
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// ===== 18) Mario Yoshi (simple match) =====
+const yoshi = (() => {
+  const g = makeBase(); g.bestKey='best_yoshi';
+  let W,H, grid=[], cols=6, rows=8, cell=28;
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    grid = Array.from({length: rows}, () => Array.from({length: cols}, () => Math.random()<0.5?1:0));
+  };
+  g.update = dt => {
+    if (paused) return;
+    // click-like with keyboard: toggle random row per Space (demo logic)
+    if (keys.has('Space')) {
+      const r = Math.floor(Math.random()*rows);
+      for(let c=0;c<cols;c++){ grid[r][c] = 1 - grid[r][c]; }
+      // score when full row
+      if (grid[r].every(v=>v===1)){ g.score += 8; grid[r] = Array(cols).fill(0); }
+    }
+  };
+  g.draw = () => {
+    clearBG(); neonText('MARIO YOSHI — Ultra 3D RTX', W/2, 24, 18);
+    const ox = (W - cols*cell)/2, oy = 50;
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+      if(grid[y][x]) neonRect(ox + x*cell, oy + y*cell, cell-4, cell-4, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+      else neonRect(ox + x*cell, oy + y*cell, cell-4, cell-4, 'rgba(90,240,255,0.3)','rgba(90,240,255,0.35)');
+    }
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// ===== 19) Yoshi Cookie (swap match) =====
+const ycookie = (() => {
+  const g = makeBase(); g.bestKey='best_ycookie';
+  let W,H, grid=[], cols=7, rows=7, cell=36, cursor={x:3,y:3};
+  g.init = () => {
+    W = cvs.width/DPR; H = cvs.height/DPR;
+    grid = Array.from({length: rows}, () => Array.from({length: cols}, () => 1 + Math.floor(Math.random()*3)));
+  };
+  function swap(ax,ay,bx,by){ const t=grid[ay][ax]; grid[ay][ax]=grid[by][bx]; grid[by][bx]=t; }
+  function clearMatches(){
+    let cleared = 0;
+    // horizontal
+    for(let y=0;y<rows;y++){
+      for(let x=0;x<cols-2;x++){
+        if(grid[y][x]===grid[y][x+1] && grid[y][x]===grid[y][x+2]){
+          grid[y][x]=grid[y][x+1]=grid[y][x+2]=0; cleared += 3;
+        }
+      }
+    }
+    // gravity
+    for(let x=0;x<cols;x++){
+      let col = [];
+      for(let y=0;y<rows;y++) if(grid[y][x]) col.push(grid[y][x]);
+      while(col.length<rows) col.unshift(0);
+      for(let y=0;y<rows;y++) grid[y][x] = col[y] || (1 + Math.floor(Math.random()*3));
+    }
+    if(cleared) g.score += cleared;
+  }
+  g.update = dt => {
+    if (paused) return;
+    if ((keys.has('ArrowLeft')||keys.has('KeyA')) && cursor.x>0) cursor.x--;
+    if ((keys.has('ArrowRight')||keys.has('KeyD')) && cursor.x<cols-1) cursor.x++;
+    if ((keys.has('ArrowUp')||keys.has('KeyW')) && cursor.y>0) cursor.y--;
+    if ((keys.has('ArrowDown')||keys.has('KeyS')) && cursor.y<rows-1) cursor.y++;
+    if (keys.has('Space')){
+      const bx = Math.min(cols-1, cursor.x+1), by = cursor.y;
+      swap(cursor.x, cursor.y, bx, by);
+      clearMatches();
+    }
+  };
+  g.draw = () => {
+    clearBG(); neonText('YOSHI COOKIE — Ultra 3D RTX', W/2, 24, 18);
+    const ox = (W - cols*cell)/2, oy = 60;
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+      const c = grid[y][x] ? 'rgba(90,240,255,0.85)' : 'rgba(90,240,255,0.25)';
+      neonRect(ox + x*cell, oy + y*cell, cell-6, cell-6, c, c);
+    }
+    // cursor highlight
+    line(ox + cursor.x*cell, oy + cursor.y*cell, ox + (cursor.x+1)*cell, oy + cursor.y*cell, 'rgba(255,123,240,0.9)');
+    line(ox + cursor.x*cell, oy + (cursor.y+1)*cell, ox + (cursor.x+1)*cell, oy + (cursor.y+1)*cell, 'rgba(255,123,240,0.9)');
+    line(ox + cursor.x*cell, oy + cursor.y*cell, ox + cursor.x*cell, oy + (cursor.y+1)*cell, 'rgba(255,123,240,0.9)');
+    line(ox + (cursor.x+1)*cell, oy + cursor.y*cell, ox + (cursor.x+1)*cell, oy + (cursor.y+1)*cell, 'rgba(255,123,240,0.9)');
+  };
+  g.action = () => { paused = false; };
+  return g;
+})();
+
+// Switcher
+const games = { snake, breakout, invaders, pong, flappy, dino, doodle, pacman, commander, mario, excitecar, dkong, dkjr, dk3,
      wrecking, tetris, drmario, yoshi, ycookie };
-  let current = games[document.getElementById('gamePicker').value];
-  function switchGame(name){
-    current = games[name]; current.reset(); updateHUD();
-  }
-  function updateHUD(){
-    scoreEl.textContent = current.score|0;
-    bestEl.textContent = current.best();
-  }
+let current = games[document.getElementById('gamePicker').value];
+function switchGame(name){
+  current = games[name]; current.reset(); updateHUD();
+}
+function updateHUD(){
+  scoreEl.textContent = current.score|0;
+  bestEl.textContent = current.best();
+}
 
-  // Loop
-  let last = performance.now();
-  function loop(now){
-    const dt = Math.min(0.033, (now-last)/1000); last = now;
-    current.update(dt);
-    current.draw();
-    current.score = current.score||0;
-    scoreEl.textContent = current.score|0;
-    bestEl.textContent = current.best();
-    requestAnimationFrame(loop);
-  }
-  Object.values(games).forEach(g=>g.reset());
-  current.reset();
+// Loop
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.033, (now-last)/1000); last = now;
+  current.update(dt);
+  current.draw();
+  current.score = current.score||0;
+  scoreEl.textContent = current.score|0;
+  bestEl.textContent = current.best();
   requestAnimationFrame(loop);
+}
+Object.values(games).forEach(g=>g.reset());
+current.reset();
+requestAnimationFrame(loop);
 })();
