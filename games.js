@@ -1003,10 +1003,307 @@
     g.action = () => { paused = false; };
     return g;
   })();
+  
+  // ===== 20) Bubble Shooter =====
+  const bubbleshooter = (() => {
+    const g = makeBase(); g.bestKey = 'best_bubbleshooter';
+    let W,H, grid=[], rows=10, cols=12, cell=34, shooter, bubble=null, colors, topOffset=70, speed=9;
+    function newBubble(){ bubble = { x: W/2, y: H-80, r: 12, vx: 0, vy: 0, color: colors[Math.floor(Math.random()*colors.length)] }; }
+    function gridPos(x,y){ const gx = Math.floor((x - (W - cols*cell)/2)/cell), gy = Math.floor((y - topOffset)/cell); return {gx,gy}; }
+    function snapBubble(b){
+      const {gx,gy} = gridPos(b.x,b.y);
+      if (gx>=0 && gx<cols && gy>=0 && gy<rows){
+        if(!grid[gy][gx]){ grid[gy][gx] = b.color; bubble = null; checkMatches(gx,gy); }
+      }
+    }
+    function neighbors(x,y){
+      const ns = [[1,0],[-1,0],[0,1],[0,-1]];
+      return ns.map(([dx,dy]) => ({x:x+dx,y:y+dy})).filter(p => p.x>=0 && p.x<cols && p.y>=0 && p.y<rows);
+    }
+    function checkMatches(x,y){
+      const color = grid[y][x]; if(!color) return;
+      const stack=[{x,y}], seen=new Set([`${x},${y}`]), group=[];
+      while(stack.length){
+        const p=stack.pop(); group.push(p);
+        neighbors(p.x,p.y).forEach(n=>{
+          if(!seen.has(`${n.x},${n.y}`)&&grid[n.y][n.x]===color){seen.add(`${n.x},${n.y}`);stack.push(n);}
+        });
+      }
+      if(group.length>=3){ group.forEach(p=> grid[p.y][p.x]=0); g.score += group.length; dropFloating(); }
+    }
+    function dropFloating(){
+      // mark connected to top
+      const visited = Array.from({length: rows}, () => Array(cols).fill(false));
+      const stack = [];
+      for(let x=0;x<cols;x++){ if(grid[0][x]){ stack.push({x,y:0}); visited[0][x]=true; } }
+      while(stack.length){
+        const p = stack.pop();
+        neighbors(p.x,p.y).forEach(n=>{
+          if(grid[n.y][n.x] && !visited[n.y][n.x]){ visited[n.y][n.x]=true; stack.push(n); }
+        });
+      }
+      // drop not visited
+      for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){ if(grid[y][x] && !visited[y][x]){ grid[y][x]=0; } }
+    }
+    g.init = () => {
+      W = cvs.width/DPR; H = cvs.height/DPR;
+      colors = ['rgba(90,240,255,0.95)','rgba(255,123,240,0.95)','rgba(230,246,255,0.95)','rgba(255,180,80,0.95)'];
+      grid = Array.from({length: rows}, (_,r) => Array.from({length: cols}, () => r<3 ? colors[Math.floor(Math.random()*colors.length)] : 0));
+      shooter = { angle: 0 };
+      newBubble();
+    };
+    g.update = dt => {
+      if (paused) return;
+      // aim
+      const left = keys.has('ArrowLeft')||keys.has('KeyA');
+      const right = keys.has('ArrowRight')||keys.has('KeyD');
+      if (left) shooter.angle -= 0.06;
+      if (right) shooter.angle += 0.06;
+      shooter.angle = Math.max(-1.2, Math.min(1.2, shooter.angle));
+      // shoot
+      if (keys.has('Space') && bubble && bubble.vx===0 && bubble.vy===0){
+        bubble.vx = Math.cos(shooter.angle) * speed;
+        bubble.vy = -Math.sin(-shooter.angle) * speed; // angle up
+      }
+      if (bubble){
+        bubble.x += bubble.vx; bubble.y += bubble.vy;
+        const leftWall = (W - cols*cell)/2, rightWall = leftWall + cols*cell;
+        if (bubble.x - bubble.r < leftWall || bubble.x + bubble.r > rightWall) bubble.vx *= -1;
+        if (bubble.y - bubble.r < topOffset) { snapBubble(bubble); newBubble(); }
+        // collision with existing bubbles
+        for(let y=0;y<rows;y++){
+          for(let x=0;x<cols;x++){
+            if(grid[y][x]){
+              const cx = (W - cols*cell)/2 + x*cell + cell/2;
+              const cy = topOffset + y*cell + cell/2;
+              if (Math.hypot(bubble.x - cx, bubble.y - cy) < bubble.r + cell*0.45){
+                snapBubble(bubble); newBubble(); y=rows; break;
+              }
+            }
+          }
+        }
+      }
+      g.score += dt * 2;
+    };
+    g.draw = () => {
+      clearBG();
+      neonText('BUBBLE SHOOTER — Ultra 3D RTX', W/2, 24, 18);
+      const ox = (W - cols*cell)/2;
+      for(let y=0;y<rows;y++){
+        for(let x=0;x<cols;x++){
+          const c = grid[y][x];
+          if(c){
+            ctx.save(); ctx.shadowColor=c; ctx.shadowBlur=14; ctx.fillStyle=c;
+            const cx = ox + x*cell + cell/2, cy = topOffset + y*cell + cell/2;
+            ctx.beginPath(); ctx.arc(Math.floor(cx)+0.5, Math.floor(cy)+0.5, cell*0.42, 0, Math.PI*2); ctx.fill(); ctx.restore();
+          }
+        }
+      }
+      // shooter
+      const sx = W/2, sy = H-80;
+      line(sx, sy, sx + Math.cos(shooter.angle)*40, sy - Math.sin(-shooter.angle)*40, 'rgba(255,123,240,0.9)');
+      if (bubble){
+        ctx.save(); ctx.shadowColor=bubble.color; ctx.shadowBlur=16; ctx.fillStyle=bubble.color;
+        ctx.beginPath(); ctx.arc(Math.floor(bubble.x)+0.5, Math.floor(bubble.y)+0.5, bubble.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+      }
+    };
+    g.action = () => { paused = false; };
+    return g;
+  })();
 
+  // ===== 21) Block Puzzle (drag-drop pieces ke grid) =====
+  const blockpuzzle = (() => {
+    const g = makeBase(); g.bestKey='best_blockpuzzle';
+    let W,H, cols=10, rows=10, cell=30, grid=[], bank=[], holding=null, ox, oy;
+    function newBank(){
+      bank = [
+        [[1,1,1]], [[1],[1],[1]], [[1,1],[1,1]], [[1,1,1],[0,1,0]], [[1,1,0],[0,1,1]]
+      ];
+    }
+    g.init = () => {
+      W = cvs.width/DPR; H = cvs.height/DPR;
+      grid = Array.from({length: rows}, () => Array(cols).fill(0));
+      newBank(); holding=null; ox=(W - cols*cell)/2; oy=60;
+    };
+    function canPlace(px,py,shape){
+      for(let y=0;y<shape.length;y++) for(let x=0;x<shape[y].length;x++){
+        if(shape[y][x]){
+          const gx=px+x, gy=py+y;
+          if(gx<0||gy<0||gx>=cols||gy>=rows||grid[gy][gx]) return false;
+        }
+      }
+      return true;
+    }
+    function place(px,py,shape){
+      for(let y=0;y<shape.length;y++) for(let x=0;x<shape[y].length;x++){
+        if(shape[y][x]) grid[py+y][px+x]=1;
+      }
+      // clear lines
+      for(let y=rows-1;y>=0;y--){
+        if(grid[y].every(v=>v)){ grid.splice(y,1); grid.unshift(Array(cols).fill(0)); g.score+=10; y++; }
+      }
+    }
+    g.update = dt => {
+      if (paused) return;
+      // pick piece
+      if (!holding && keys.has('Space')) holding = bank[Math.floor(Math.random()*bank.length)];
+      // rotate
+      if (holding && keys.has('ArrowUp')) holding = holding[0].map((_,i)=>holding.map(r=>r[i])).reverse();
+      // move cursor with arrows (simulate drag)
+      const cx = Math.floor((cols/2) + (keys.has('ArrowRight') - keys.has('ArrowLeft')));
+      const cy = Math.floor(rows/2 + (keys.has('ArrowDown') - keys.has('ArrowUp')));
+      // place with X
+      if (holding && keys.has('KeyX')){
+        const px = cx, py = cy;
+        if (canPlace(px,py,holding)){ place(px,py,holding); holding=null; g.score+=3; }
+      }
+    };
+    g.draw = () => {
+      clearBG(); neonText('BLOCK PUZZLE — Ultra 3D RTX', W/2, 24, 18);
+      // grid
+      for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+        const c = grid[y][x] ? 'rgba(90,240,255,0.85)' : 'rgba(90,240,255,0.25)';
+        neonRect(ox + x*cell, oy + y*cell, cell-2, cell-2, c, c);
+      }
+      // holding
+      if (holding){
+        const cx = Math.floor(cols/2), cy = Math.floor(rows/2);
+        for(let y=0;y<holding.length;y++) for(let x=0;x<holding[y].length;x++){
+          if(holding[y][x]) neonRect(ox + (cx+x)*cell, oy + (cy+y)*cell, cell-2, cell-2, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+        }
+      }
+    };
+    g.action = () => { paused = false; };
+    return g;
+  })();
+
+  // ===== 22) Endless Match (match-3 tanpa batas) =====
+  const endlessmatch = (() => {
+    const g = makeBase(); g.bestKey='best_endlessmatch';
+    let W,H, cols=8, rows=8, cell=36, grid=[], cursor={x:3,y:3};
+    g.init = () => {
+      W = cvs.width/DPR; H = cvs.height/DPR;
+      grid = Array.from({length: rows}, () => Array.from({length: cols}, () => 1 + Math.floor(Math.random()*4)));
+    };
+    function swap(ax,ay,bx,by){ const t=grid[ay][ax]; grid[ay][ax]=grid[by][bx]; grid[by][bx]=t; }
+    function clearMatches(){
+      let cleared=0;
+      // horizontal
+      for(let y=0;y<rows;y++) for(let x=0;x<cols-2;x++){
+        const v=grid[y][x]; if(v&&grid[y][x+1]===v&&grid[y][x+2]===v){ grid[y][x]=grid[y][x+1]=grid[y][x+2]=0; cleared+=3; }
+      }
+      // vertical
+      for(let x=0;x<cols;x++) for(let y=0;y<rows-2;y++){
+        const v=grid[y][x]; if(v&&grid[y+1][x]===v&&grid[y+2][x]===v){ grid[y][x]=grid[y+1][x]=grid[y+2][x]=0; cleared+=3; }
+      }
+      // gravity + refill
+      for(let x=0;x<cols;x++){
+        const col=[]; for(let y=0;y<rows;y++) if(grid[y][x]) col.push(grid[y][x]);
+        while(col.length<rows) col.unshift(0);
+        for(let y=0;y<rows;y++) grid[y][x] = col[y] || (1 + Math.floor(Math.random()*4));
+      }
+      if (cleared) g.score += cleared;
+    }
+    g.update = dt => {
+      if (paused) return;
+      if ((keys.has('ArrowLeft')||keys.has('KeyA')) && cursor.x>0) cursor.x--;
+      if ((keys.has('ArrowRight')||keys.has('KeyD')) && cursor.x<cols-1) cursor.x++;
+      if ((keys.has('ArrowUp')||keys.has('KeyW')) && cursor.y>0) cursor.y--;
+      if ((keys.has('ArrowDown')||keys.has('KeyS')) && cursor.y<rows-1) cursor.y++;
+      if (keys.has('Space')){ const bx = Math.min(cols-1, cursor.x+1), by = cursor.y; swap(cursor.x,cursor.y,bx,by); clearMatches(); }
+      g.score += dt * 2;
+    };
+    g.draw = () => {
+      clearBG(); neonText('ENDLESS MATCH — Ultra 3D RTX', W/2, 24, 18);
+      const ox = (W - cols*cell)/2, oy = 60;
+      for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+        const color = ['rgba(90,240,255,0.85)','rgba(255,123,240,0.85)','rgba(230,246,255,0.95)','rgba(255,180,80,0.85)'][grid[y][x]-1];
+        neonRect(ox + x*cell, oy + y*cell, cell-6, cell-6, color, color);
+      }
+      // cursor
+      line(ox + cursor.x*cell, oy + cursor.y*cell, ox + (cursor.x+1)*cell, oy + cursor.y*cell, 'rgba(255,123,240,0.9)');
+      line(ox + cursor.x*cell, oy + (cursor.y+1)*cell, ox + (cursor.x+1)*cell, oy + (cursor.y+1)*cell, 'rgba(255,123,240,0.9)');
+      line(ox + cursor.x*cell, oy + cursor.y*cell, ox + cursor.x*cell, oy + (cursor.y+1)*cell, 'rgba(255,123,240,0.9)');
+      line(ox + (cursor.x+1)*cell, oy + cursor.y*cell, ox + (cursor.x+1)*cell, oy + (cursor.y+1)*cell, 'rgba(255,123,240,0.9)');
+    };
+    g.action = () => { paused = false; };
+    return g;
+  })();
+
+  // ===== 23) Memory Sounds (Simon-like dengan audio) =====
+  const memorysounds = (() => {
+    const g = makeBase(); g.bestKey='best_memorysounds';
+    let W,H, pads=[], seq=[], input=[], playing=false, t=0, pointer=0;
+    // WebAudio untuk suara tajam
+    const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+    function beep(freq, dur=0.25){
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      osc.type = 'sine'; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctxAudio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.15, ctxAudio.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctxAudio.currentTime + dur);
+      osc.connect(gain); gain.connect(ctxAudio.destination);
+      osc.start(); osc.stop(ctxAudio.currentTime + dur);
+    }
+    function addStep(){ seq.push(Math.floor(Math.random()*4)); }
+    g.init = () => {
+      W = cvs.width/DPR; H = cvs.height/DPR;
+      pads = [
+        { x: W/2 - 140, y: 120, w: 120, h: 120, color:'rgba(90,240,255,0.9)', freq: 440 },
+        { x: W/2 + 20,  y: 120, w: 120, h: 120, color:'rgba(255,123,240,0.9)', freq: 550 },
+        { x: W/2 - 140, y: 260, w: 120, h: 120, color:'rgba(230,246,255,0.95)', freq: 660 },
+        { x: W/2 + 20,  y: 260, w: 120, h: 120, color:'rgba(255,180,80,0.9)', freq: 770 },
+      ];
+      seq=[]; input=[]; addStep(); playing=true; t=0; pointer=0;
+    };
+    g.update = dt => {
+      if (paused) return;
+      if (playing){
+        t += dt;
+        // play sequence dengan interval
+        if (t > 0.6){
+          t = 0;
+          const idx = seq[pointer];
+          const p = pads[idx];
+          beep(p.freq, 0.22);
+          pointer++;
+          if (pointer >= seq.length){ playing=false; pointer=0; }
+        }
+      } else {
+        // user input: WASD/Arrow keys untuk pilih pad, Space untuk submit satu tone
+        let sel = -1;
+        if (keys.has('ArrowUp')||keys.has('KeyW')) sel = 0;
+        else if (keys.has('ArrowRight')||keys.has('KeyD')) sel = 1;
+        else if (keys.has('ArrowLeft')||keys.has('KeyA')) sel = 2;
+        else if (keys.has('ArrowDown')||keys.has('KeyS')) sel = 3;
+        if (sel>=0 && keys.has('Space')){
+          input.push(sel);
+          beep(pads[sel].freq, 0.18);
+          const i = input.length - 1;
+          if (input[i] !== seq[i]){
+            paused = true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score));
+          } else if (input.length === seq.length){
+            g.score += seq.length;
+            addStep(); input=[]; playing=true; t=0; pointer=0;
+          }
+        }
+      }
+    };
+    g.draw = () => {
+      clearBG(); neonText('MEMORY SOUNDS — Ultra 3D RTX', W/2, 24, 18);
+      pads.forEach((p,i)=>{
+        const glow = playing && i===seq[Math.min(pointer,seq.length-1)] ? 'rgba(255,255,255,0.9)' : p.color;
+        neonRect(p.x, p.y, p.w, p.h, glow, p.color);
+      });
+      neonText(playing ? 'Dengarkan dan hafalkan nada' : 'Masukkan urutan dengan Space', W/2, H-40, 16);
+    };
+    g.action = () => { paused = false; };
+    return g;
+  })();
   // Switcher
   const games = { snake, breakout, invaders, pong, flappy, dino, doodle, commander, mario, excitecar, dkong, dkjr, dk3,
-     wrecking, tetris, drmario, yoshi, ycookie };
+     wrecking, tetris, drmario, yoshi, ycookie, bubbleshooter, blockpuzzle, endlessmatch, memorysounds };
   let current = games[document.getElementById('gamePicker').value];
   function switchGame(name){
     current = games[name]; current.reset(); updateHUD();
