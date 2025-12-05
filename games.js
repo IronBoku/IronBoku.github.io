@@ -1088,4 +1088,4 @@ function loop(now){
 Object.values(games).forEach(g=>g.reset());
 current.reset();
 requestAnimationFrame(loop);
-})(); test
+})();
