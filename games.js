@@ -1359,9 +1359,113 @@
     g.action = () => { paused = false; };
     return g;
   })();
+  
+  // ===== 24) Endless Memory Match =====
+  const endlessmemory = (() => {
+    const g = makeBase(); g.bestKey='best_endlessmemory';
+    let W,H, cards=[], flipped=[], matched=0;
+    const ctxAudio = new (window.AudioContext||window.webkitAudioContext)();
+    function flipSound(){
+      const osc=ctxAudio.createOscillator(); const gain=ctxAudio.createGain();
+      osc.type='square'; osc.frequency.value=600;
+      gain.gain.setValueAtTime(0.0001, ctxAudio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.2, ctxAudio.currentTime+0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctxAudio.currentTime+0.25);
+      osc.connect(gain); gain.connect(ctxAudio.destination);
+      osc.start(); osc.stop(ctxAudio.currentTime+0.25);
+    }
+    function newDeck(){
+      const values=[]; for(let i=0;i<8;i++){ values.push(i,i); }
+      values.sort(()=>Math.random()-0.5);
+      cards=values.map((v,i)=>({val:v,flip:false,match:false,x:0,y:0}));
+      const cols=4, rows=4, cell=80;
+      W=cvs.width/DPR; H=cvs.height/DPR;
+      const ox=(W-cols*cell)/2, oy=80;
+      cards.forEach((c,i)=>{ c.x=ox+(i%cols)*cell; c.y=oy+Math.floor(i/cols)*cell; });
+      flipped=[]; matched=0;
+    }
+    g.init=()=>{ newDeck(); };
+    g.update=dt=>{
+      if(paused) return;
+      // kontrol: panah untuk pilih index, Space untuk flip
+      if(keys.has('Space')){
+        const idx=Math.floor(Math.random()*cards.length);
+        const c=cards[idx];
+        if(!c.flip&&!c.match){
+          c.flip=true; flipped.push(c); flipSound();
+          if(flipped.length===2){
+            if(flipped[0].val===flipped[1].val){
+              flipped[0].match=flipped[1].match=true; g.score+=5; matched+=2;
+            } else {
+              flipped[0].flip=flipped[1].flip=false;
+            }
+            flipped=[];
+          }
+        }
+      }
+      if(matched===cards.length){ newDeck(); }
+    };
+    g.draw=()=>{
+      clearBG(); neonText('ENDLESS MEMORY MATCH — Ultra 3D RTX', W/2, 24, 18);
+      cards.forEach(c=>{
+        if(c.match){ neonRect(c.x,c.y,70,70,'rgba(90,240,255,0.9)','rgba(90,240,255,0.95)'); }
+        else if(c.flip){ neonText(String(c.val),c.x+35,c.y+35,20); }
+        else { neonRect(c.x,c.y,70,70,'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)'); }
+      });
+    };
+    g.action=()=>{paused=false;};
+    return g;
+  })();
+
+  // ===== 25) Galaxy Shooter =====
+  const galaxy = (() => {
+    const g=makeBase(); g.bestKey='best_galaxy';
+    let W,H, ship, bullets=[], foes=[], cooldown=0, spawnT=0;
+    g.init=()=>{
+      W=cvs.width/DPR; H=cvs.height/DPR;
+      ship={x:W/2,y:H-60,w:30,h:20};
+      bullets=[]; foes=[]; cooldown=0; spawnT=0;
+    };
+    g.update=dt=>{
+      if(paused) return;
+      if(keys.has('ArrowLeft')||keys.has('KeyA')) ship.x-=4;
+      if(keys.has('ArrowRight')||keys.has('KeyD')) ship.x+=4;
+      ship.x=Math.max(20,Math.min(W-20,ship.x));
+      cooldown=Math.max(0,cooldown-dt);
+      if(keys.has('Space')&&cooldown===0){
+        bullets.push({x:ship.x,y:ship.y-10,v: -6});
+        cooldown=0.2;
+      }
+      bullets.forEach(b=>b.y+=b.v);
+      bullets=bullets.filter(b=>b.y>-20);
+      spawnT+=dt;
+      if(spawnT>0.8){ spawnT=0; foes.push({x:Math.random()*W,y:40,v:2}); }
+      foes.forEach(f=>f.y+=f.v);
+      foes=foes.filter(f=>f.y<H+20);
+      bullets.forEach(b=>{
+        foes.forEach(f=>{
+          if(Math.abs(b.x-f.x)<20&&Math.abs(b.y-f.y)<20){ f.y=H+999; b.y=-999; g.score+=2; }
+        });
+      });
+      foes.forEach(f=>{
+        if(Math.abs(ship.x-f.x)<20&&Math.abs(ship.y-f.y)<20){
+          paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(),g.score));
+        }
+      });
+    };
+    g.draw=()=>{
+      clearBG(); neonText('GALAXY SHOOTER — Ultra 3D RTX',W/2,24,18);
+      neonRect(ship.x-15,ship.y-10,30,20,'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
+      bullets.forEach(b=>neonRect(b.x-3,b.y-6,6,12,'rgba(230,246,255,0.95)','rgba(230,246,255,0.95)'));
+      foes.forEach(f=>neonRect(f.x-12,f.y-12,24,24,'rgba(90,240,255,0.85)','rgba(90,240,255,0.95)'));
+    };
+    g.action=()=>{paused=false;};
+    return g;
+  })();
+  
   // Switcher
   const games = { snake, breakout, invaders, pong, flappy, dino, doodle, pacman, commander, mario, excitecar, dkong, dkjr, dk3,
-     wrecking, tetris, drmario, yoshi, ycookie, bubbleshooter, blockpuzzle, endlessmatch, memorysounds };
+     wrecking, tetris, drmario, yoshi, ycookie, bubbleshooter, blockpuzzle, endlessmatch, memorysounds, endlessmemory, galaxy };
   let current = games[document.getElementById('gamePicker').value];
   function switchGame(name){
     current = games[name]; current.reset(); updateHUD();
