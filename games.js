@@ -480,8 +480,66 @@
     g.action=()=>{ paused=false; };
     return g;
   })();
+
+  // ===== 8) Pac-Man =====
+  const pacman = (() => {
+    const g = makeBase(); g.bestKey = 'best_pacman';
+    let W,H, player, ghosts = [], pellets = [], speed = 3;
+    g.init = () => {
+      W = cvs.width/DPR; H = cvs.height/DPR;
+      player = { x: W/2, y: H/2, r: 10, vx:0, vy:0 };
+      pellets = [];
+      for(let x=40;x<W-40;x+=24){ for(let y=40;y<H-40;y+=24){ pellets.push({x,y,eaten:false}); } }
+      // 4 hantu sederhana
+      ghosts = [
+        { x: 100, y: 100, vx: 2, vy: 2, color: 'rgba(255,123,240,0.9)' },
+        { x: W-100, y: 100, vx: -2, vy: 2, color: 'rgba(90,240,255,0.9)' },
+        { x: 100, y: H-100, vx: 2, vy: -2, color: 'rgba(230,246,255,0.95)' },
+        { x: W-100, y: H-100, vx: -2, vy: -2, color: 'rgba(255,180,80,0.9)' }
+      ];
+    };
+    g.update = dt => {
+      if (paused) return;
+      player.vx = (keys.has('ArrowLeft')||keys.has('KeyA')) ? -speed : (keys.has('ArrowRight')||keys.has('KeyD')) ? speed : 0;
+      player.vy = (keys.has('ArrowUp')||keys.has('KeyW')) ? -speed : (keys.has('ArrowDown')||keys.has('KeyS')) ? speed : 0;
+      player.x = Math.max(20, Math.min(W-20, player.x + player.vx));
+      player.y = Math.max(20, Math.min(H-20, player.y + player.vy));
+      pellets.forEach(p=>{
+        if(!p.eaten && Math.hypot(player.x-p.x, player.y-p.y) < 12){ p.eaten = true; g.score += 1; }
+      });
+      ghosts.forEach(gh=>{
+        gh.x += gh.vx; gh.y += gh.vy;
+        if (gh.x < 20 || gh.x > W-20) gh.vx *= -1;
+        if (gh.y < 20 || gh.y > H-20) gh.vy *= -1;
+        if (Math.hypot(player.x - gh.x, player.y - gh.y) < 18){
+          paused = true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score));
+        }
+      });
+    };
+    g.draw = () => {
+      clearBG();
+      neonText('PAC-MAN — Ultra 3D RTX', W/2, 24, 18);
+      pellets.forEach(p=>{
+        if(!p.eaten){
+          ctx.save(); ctx.shadowColor='rgba(90,240,255,0.8)'; ctx.shadowBlur=8;
+          ctx.fillStyle='rgba(230,246,255,0.95)'; ctx.beginPath();
+          ctx.arc(Math.floor(p.x)+0.5, Math.floor(p.y)+0.5, 3, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        }
+      });
+      ctx.save(); ctx.shadowColor='rgba(255,255,0,0.9)'; ctx.shadowBlur=16;
+      ctx.fillStyle='yellow'; ctx.beginPath();
+      ctx.arc(Math.floor(player.x)+0.5, Math.floor(player.y)+0.5, player.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+      ghosts.forEach(gh=>{
+        ctx.save(); ctx.shadowColor=gh.color; ctx.shadowBlur=16;
+        ctx.fillStyle=gh.color; ctx.beginPath();
+        ctx.arc(Math.floor(gh.x)+0.5, Math.floor(gh.y)+0.5, 12, 0, Math.PI*2); ctx.fill(); ctx.restore();
+      });
+    };
+    g.action = () => { paused = false; };
+    return g;
+  })();
   
-  // ===== 8) Commander (side-scrolling shooter) =====
+  // ===== 9) Commander (side-scrolling shooter) =====
   const commander = (() => {
     const g = makeBase(); g.bestKey='best_commander';
     let W,H, ship, bullets=[], foes=[], speed=2.4, cooldown=0, spawnT=0;
@@ -533,7 +591,7 @@
     return g;
   })();
 
-  // ===== 9) Mario Bros. Arcade (single-screen platformer) =====
+  // ===== 10) Mario Bros. Arcade (single-screen platformer) =====
   const mario = (() => {
     const g = makeBase(); g.bestKey='best_mario';
     let W,H, player, platforms=[], enemies=[];
@@ -583,7 +641,7 @@
     return g;
   })();
 
-  // ===== 10) Excitecar (endless car runner) =====
+  // ===== 11) Excitecar (endless car runner) =====
   const excitecar = (() => {
     const g = makeBase(); g.bestKey='best_excitecar';
     let W,H, car, obs=[], speed=4, laneW;
@@ -626,7 +684,7 @@
     return g;
   })();
 
-  // ===== 11) Donkey Kong =====
+  // ===== 12) Donkey Kong =====
   const dkong = (() => {
     const g = makeBase(); g.bestKey='best_dkong';
     let W,H, p, platforms=[], barrels=[];
@@ -677,7 +735,7 @@
     return g;
   })();
 
-  // ===== 12) Donkey Kong Jr. =====
+  // ===== 13) Donkey Kong Jr. =====
   const dkjr = (() => {
     const g = makeBase(); g.bestKey='best_dkjr';
     let W,H, p, vines=[], foes=[];
@@ -713,7 +771,7 @@
     return g;
   })();
 
-  // ===== 13) Donkey Kong 3 (bug spray arena) =====
+  // ===== 14) Donkey Kong 3 (bug spray arena) =====
   const dk3 = (() => {
     const g = makeBase(); g.bestKey='best_dk3';
     let W,H, player, bugs=[];
@@ -745,7 +803,7 @@
     return g;
   })();
 
-  // ===== 14) Wrecking Crew (block puzzle) =====
+  // ===== 15) Wrecking Crew (block puzzle) =====
   const wrecking = (() => {
     const g = makeBase(); g.bestKey='best_wrecking';
     let W,H, hammer, blocks=[];
@@ -778,7 +836,7 @@
     return g;
   })();
 
-  // ===== 15) Tetris =====
+  // ===== 16) Tetris =====
   const tetris = (() => {
     const g = makeBase(); g.bestKey='best_tetris';
     let W,H, grid=[], cols=10, rows=20, cell=22, piece=null, fall=0, speed=0.6;
@@ -856,7 +914,7 @@
     return g;
   })();
 
-  // ===== 16) Dr. Mario (capsule match) =====
+  // ===== 17) Dr. Mario (capsule match) =====
   const drmario = (() => {
     const g = makeBase(); g.bestKey='best_drmario';
     let W,H, grid=[], cols=8, rows=16, cell=24, capsule=null, fall=0, speed=0.7;
@@ -917,7 +975,7 @@
     return g;
   })();
 
-  // ===== 17) Mario Yoshi (simple match) =====
+  // ===== 18) Mario Yoshi (simple match) =====
   const yoshi = (() => {
     const g = makeBase(); g.bestKey='best_yoshi';
     let W,H, grid=[], cols=6, rows=8, cell=28;
@@ -947,7 +1005,7 @@
     return g;
   })();
 
-  // ===== 18) Yoshi Cookie (swap match) =====
+  // ===== 19) Yoshi Cookie (swap match) =====
   const ycookie = (() => {
     const g = makeBase(); g.bestKey='best_ycookie';
     let W,H, grid=[], cols=7, rows=7, cell=36, cursor={x:3,y:3};
@@ -1302,7 +1360,7 @@
     return g;
   })();
   // Switcher
-  const games = { snake, breakout, invaders, pong, flappy, dino, doodle, commander, mario, excitecar, dkong, dkjr, dk3,
+  const games = { snake, breakout, invaders, pong, flappy, dino, doodle, pacman, commander, mario, excitecar, dkong, dkjr, dk3,
      wrecking, tetris, drmario, yoshi, ycookie, bubbleshooter, blockpuzzle, endlessmatch, memorysounds };
   let current = games[document.getElementById('gamePicker').value];
   function switchGame(name){
