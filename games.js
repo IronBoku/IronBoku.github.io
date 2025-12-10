@@ -286,7 +286,7 @@
     return g;
   })();
 
-  // 4) Pong vs CPU
+  // 4) Pong (vs. CPU) 
   const pong = (() => {
     const g = makeBase(); g.bestKey='best_pong';
     let W,H,p1,p2,ball;
@@ -325,7 +325,7 @@
       }
     };
     g.draw = () => {
-      clearBG(); neonText('PONG vs CPU — Ultra 3D RTX', (cvs.width/DPR)/2, 24, 18);
+      clearBG(); neonText('PONG (vs. CPU) — Ultra 3D RTX', (cvs.width/DPR)/2, 24, 18);
       // mid line
       for(let y=40;y<H;y+=24) line(W/2, y, W/2, y+12, 'rgba(90,240,255,0.25)');
       // paddles
@@ -376,7 +376,7 @@
     };
     function lose(){ paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(), g.score)); }
     g.draw = () => {
-      clearBG(); neonText('FLAPPY — Ultra 3D RTX', (cvs.width/DPR)/2, 24, 18);
+      clearBG(); neonText('FLAPPY BIRD — Ultra 3D RTX', (cvs.width/DPR)/2, 24, 18);
       // pipes neon
       pipes.forEach(p=>{
         neonRect(p.x, 0, p.w, p.top, 'rgba(90,240,255,0.85)','rgba(90,240,255,0.95)');
@@ -539,7 +539,7 @@
     return g;
   })();
   
-  // ===== 9) Commander (side-scrolling shooter) =====
+  // ===== 9) Ocean Commander (side-scrolling shooter) =====
   const commander = (() => {
     const g = makeBase(); g.bestKey='best_commander';
     let W,H, ship, bullets=[], foes=[], speed=2.4, cooldown=0, spawnT=0;
@@ -582,7 +582,7 @@
     };
     g.draw = () => {
       clearBG();
-      neonText('COMMANDER — Ultra 3D RTX', W/2, 24, 18);
+      neonText('OCEAN COMMANDER — Ultra 3D RTX', W/2, 24, 18);
       neonRect(ship.x, ship.y - ship.h/2, ship.w, ship.h, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
       bullets.forEach(b=> neonRect(b.x-3, b.y-2, 6, 4, 'rgba(230,246,255,0.9)','rgba(230,246,255,0.95)'));
       foes.forEach(f=> neonRect(f.x, f.y, f.w, f.h, 'rgba(90,240,255,0.85)','rgba(90,240,255,0.95)'));
@@ -632,7 +632,7 @@
       g.score += dt * 10;
     };
     g.draw = () => {
-      clearBG(); neonText('MARIO BROS — Ultra 3D RTX', W/2, 24, 18);
+      clearBG(); neonText('MARIO BROS. ARCADE — Ultra 3D RTX', W/2, 24, 18);
       platforms.forEach(p=> neonRect(p.x, p.y, p.w, p.h, 'rgba(90,240,255,0.85)','rgba(90,240,255,0.95)'));
       neonRect(player.x, player.y, player.w, player.h, 'rgba(255,123,240,0.9)','rgba(255,123,240,0.95)');
       enemies.forEach(e=> neonRect(e.x, e.y, e.w, e.h));
