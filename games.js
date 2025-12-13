@@ -1952,8 +1952,7 @@
   // Switcher
   const games = { snake, breakout, invaders, pong, flappy, dino, doodle, pacman, commander, mario, excitecar, dkong, dkjr, dk3,
      wrecking, tetris, drmario, yoshi, ycookie, bubbleshooter, blockpuzzle, endlessmatch, memorysounds, endlessmemory, galaxy, dotsconnect, pipemania, endlesscatch,
-  freefall,
-  hillracing };
+     freefall, hillracing };
   let current = games[document.getElementById('gamePicker').value];
   function switchGame(name){
     current = games[name]; current.reset(); updateHUD();
