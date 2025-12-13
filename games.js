@@ -1463,9 +1463,101 @@
     return g;
   })();
   
+  // ===== 26) Endless Dots Connect =====
+  const dotsconnect = (() => {
+    const g = makeBase(); g.bestKey='best_dotsconnect';
+    let W,H, dots=[], cursor={x:0,y:0}, path=[];
+    g.init=()=>{
+      W=cvs.width/DPR; H=cvs.height/DPR;
+      dots=[]; for(let i=0;i<20;i++){ dots.push({x:Math.random()*W,y:Math.random()*H,used:false}); }
+      cursor={x:W/2,y:H/2}; path=[];
+    };
+    g.update=dt=>{
+      if(paused) return;
+      if(keys.has('ArrowLeft')||keys.has('KeyA')) cursor.x-=4;
+      if(keys.has('ArrowRight')||keys.has('KeyD')) cursor.x+=4;
+      if(keys.has('ArrowUp')||keys.has('KeyW')) cursor.y-=4;
+      if(keys.has('ArrowDown')||keys.has('KeyS')) cursor.y+=4;
+      cursor.x=Math.max(20,Math.min(W-20,cursor.x));
+      cursor.y=Math.max(20,Math.min(H-20,cursor.y));
+      dots.forEach(d=>{
+        if(!d.used && Math.hypot(cursor.x-d.x,cursor.y-d.y)<16){
+          d.used=true; path.push({x:d.x,y:d.y}); g.score+=2;
+        }
+      });
+      if(path.length===dots.length){ // reset deck
+        g.score+=10; g.init();
+      }
+    };
+    g.draw=()=>{
+      clearBG(); neonText('ENDLESS DOTS CONNECT — Ultra 3D RTX',W/2,24,18);
+      dots.forEach(d=>{
+        const c=d.used?'rgba(255,123,240,0.9)':'rgba(90,240,255,0.9)';
+        ctx.save(); ctx.shadowColor=c; ctx.shadowBlur=12; ctx.fillStyle=c;
+        ctx.beginPath(); ctx.arc(Math.floor(d.x)+0.5,Math.floor(d.y)+0.5,8,0,Math.PI*2); ctx.fill(); ctx.restore();
+      });
+      if(path.length>1){
+        ctx.strokeStyle='rgba(230,246,255,0.95)'; ctx.lineWidth=3; ctx.beginPath();
+        ctx.moveTo(path[0].x,path[0].y); for(let i=1;i<path.length;i++) ctx.lineTo(path[i].x,path[i].y);
+        ctx.stroke();
+      }
+      neonRect(cursor.x-6,cursor.y-6,12,12,'rgba(255,255,0,0.9)','yellow');
+    };
+    g.action=()=>{paused=false;};
+    return g;
+  })();
+
+  // ===== 27) Endless Pipe Mania =====
+  const pipemania = (() => {
+    const g=makeBase(); g.bestKey='best_pipemania';
+    let W,H, grid=[], cols=8, rows=8, cell=50, flow=[], pointer=0;
+    function newGrid(){
+      grid=Array.from({length:rows},()=>Array.from({length:cols},()=>Math.floor(Math.random()*4)));
+      flow=[{x:0,y:Math.floor(rows/2)}]; pointer=0;
+    }
+    g.init=()=>{ W=cvs.width/DPR; H=cvs.height/DPR; newGrid(); };
+    g.update=dt=>{
+      if(paused) return;
+      // rotate pipe at cursor with Space
+      const cx=Math.floor(cols/2), cy=Math.floor(rows/2);
+      if(keys.has('Space')) grid[cy][cx]=(grid[cy][cx]+1)%4;
+      // simulate flow
+      pointer+=dt*2;
+      if(pointer>=1){
+        pointer=0;
+        const head=flow[flow.length-1];
+        let dir=grid[head.y][head.x];
+        let nx=head.x, ny=head.y;
+        if(dir===0) nx++; else if(dir===1) ny++; else if(dir===2) nx--; else if(dir===3) ny--;
+        if(nx<0||ny<0||nx>=cols||ny>=rows){ paused=true; statusEl.textContent='Game Over'; g.setBest(Math.max(g.best(),g.score)); }
+        else { flow.push({x:nx,y:ny}); g.score+=1; }
+      }
+    };
+    g.draw=()=>{
+      clearBG(); neonText('ENDLESS PIPE MANIA — Ultra 3D RTX',W/2,24,18);
+      const ox=(W-cols*cell)/2, oy=60;
+      for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+        const dir=grid[y][x]; const cx=ox+x*cell, cy=oy+y*cell;
+        neonRect(cx,cy,cell-4,cell-4,'rgba(90,240,255,0.6)','rgba(90,240,255,0.3)');
+        ctx.save(); ctx.strokeStyle='rgba(255,123,240,0.9)'; ctx.lineWidth=4;
+        ctx.beginPath(); ctx.moveTo(cx+cell/2,cy+cell/2);
+        if(dir===0) ctx.lineTo(cx+cell,cy+cell/2);
+        if(dir===1) ctx.lineTo(cx+cell/2,cy+cell);
+        if(dir===2) ctx.lineTo(cx,cy+cell/2);
+        if(dir===3) ctx.lineTo(cx+cell/2,cy);
+        ctx.stroke(); ctx.restore();
+      }
+      flow.forEach(f=>{
+        neonRect(ox+f.x*cell+cell/4,oy+f.y*cell+cell/4,cell/2,cell/2,'rgba(255,255,0,0.9)','yellow');
+      });
+    };
+    g.action=()=>{paused=false;};
+    return g;
+  })();
+  
   // Switcher
   const games = { snake, breakout, invaders, pong, flappy, dino, doodle, pacman, commander, mario, excitecar, dkong, dkjr, dk3,
-     wrecking, tetris, drmario, yoshi, ycookie, bubbleshooter, blockpuzzle, endlessmatch, memorysounds, endlessmemory, galaxy };
+     wrecking, tetris, drmario, yoshi, ycookie, bubbleshooter, blockpuzzle, endlessmatch, memorysounds, endlessmemory, galaxy, dotsconnect, pipemania };
   let current = games[document.getElementById('gamePicker').value];
   function switchGame(name){
     current = games[name]; current.reset(); updateHUD();
