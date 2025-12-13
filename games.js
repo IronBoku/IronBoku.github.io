@@ -1554,10 +1554,406 @@
     g.action=()=>{paused=false;};
     return g;
   })();
+
+  // ===== 28) Endless Catch Game =====
+  const endlesscatch = (() => {
+    const g = makeBase(); g.bestKey = 'best_endlesscatch';
+    let W, H, basket, items, spawnTimer, miss, gameOverFlag;
+    function spawnItem() {
+      const types = ['good', 'good', 'good', 'good', 'bomb'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      const speed = 2.2 + Math.random() * 2.5;
+      const x = 40 + Math.random() * (W - 80);
+      items.push({ x, y: -20, r: 12, type, v: speed });
+    }
+    g.init = () => {
+      W = cvs.width / DPR;
+      H = cvs.height / DPR;
+      basket = { x: W / 2, y: H - 60, w: 90, h: 18 };
+      items = [];
+      spawnTimer = 0;
+      miss = 0;
+      gameOverFlag = false;
+      g.score = 0;
+    };
+    function endGame() {
+      if (!gameOverFlag) {
+        gameOverFlag = true;
+        paused = true;
+        statusEl.textContent = 'Game Over';
+        g.setBest(Math.max(g.best(), g.score));
+      }
+    }
+    g.update = dt => {
+      if (paused) return;
+      if (gameOverFlag) return;
+      if (keys.has('ArrowLeft') || keys.has('KeyA')) basket.x -= 5;
+      if (keys.has('ArrowRight') || keys.has('KeyD')) basket.x += 5;
+      basket.x = Math.max(basket.w / 2 + 10, Math.min(W - basket.w / 2 - 10, basket.x));
+      spawnTimer -= dt;
+      if (spawnTimer <= 0) {
+        spawnItem();
+        spawnTimer = 0.6 + Math.random() * 0.3;
+      }
+      items.forEach(it => {
+        it.y += it.v;
+      });
+      const bx1 = basket.x - basket.w / 2;
+      const bx2 = basket.x + basket.w / 2;
+      const by1 = basket.y - basket.h / 2;
+      const by2 = basket.y + basket.h / 2;
+      items.forEach(it => {
+        if (!it.caught && !it.dead) {
+          const ix = it.x;
+          const iy = it.y;
+          if (ix > bx1 && ix < bx2 && iy > by1 && iy < by2) {
+            it.caught = true;
+            if (it.type === 'good') {
+              g.score += 5;
+            } else if (it.type === 'bomb') {
+              endGame();
+            }
+          }
+        }
+      });
+      items.forEach(it => {
+        if (!it.caught && !it.dead && it.y - it.r > H) {
+          it.dead = true;
+          if (it.type === 'good') {
+            miss += 1;
+            if (miss >= 3) endGame();
+          }
+        }
+      });
+      items = items.filter(it => it.y - it.r <= H + 40 && !it.remove);
+      g.score += dt * 1.5;
+    };
+    g.draw = () => {
+      clearBG();
+      const title = 'ENDLESS CATCH — Ultra 3D RTX';
+      neonText(title, (cvs.width / DPR) / 2, 26, 18);
+      const missText = 'MISS: ' + miss + ' / 3';
+      neonText(missText, (cvs.width / DPR) - 90, 52, 14);
+      neonRect(basket.x - basket.w / 2, basket.y - basket.h / 2, basket.w, basket.h, 'rgba(90,240,255,0.9)', 'rgba(90,240,255,0.95)');
+      items.forEach(it => {
+        if (it.type === 'good') {
+          ctx.save();
+          ctx.shadowColor = 'rgba(255,180,80,0.9)';
+          ctx.shadowBlur = 14;
+          ctx.fillStyle = 'rgba(255,180,80,0.95)';
+          ctx.beginPath();
+          ctx.arc(Math.floor(it.x) + 0.5, Math.floor(it.y) + 0.5, it.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        } else if (it.type === 'bomb') {
+          ctx.save();
+          ctx.shadowColor = 'rgba(255,60,90,0.95)';
+          ctx.shadowBlur = 16;
+          ctx.fillStyle = 'rgba(40,0,10,0.98)';
+          ctx.beginPath();
+          ctx.arc(Math.floor(it.x) + 0.5, Math.floor(it.y) + 0.5, it.r + 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255,60,90,0.95)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(it.x - 6, it.y - 6);
+          ctx.lineTo(it.x + 6, it.y + 6);
+          ctx.moveTo(it.x + 6, it.y - 6);
+          ctx.lineTo(it.x - 6, it.y + 6);
+          ctx.stroke();
+          ctx.restore();
+        }
+      });
+    };
+    g.action = () => { paused = false; };
+    return g;
+  })();
+
+  // ===== 29) Endless 2D Free Fall Game =====
+  const freefall = (() => {
+    const g = makeBase(); g.bestKey = 'best_freefall';
+    let W, H, player, obstacles, bonuses, spawnObs, spawnBonus, speed, gameOverFlag;
+    g.init = () => {
+      W = cvs.width / DPR;
+      H = cvs.height / DPR;
+      player = { x: W / 2, y: H / 3, r: 14, vy: 0 };
+      obstacles = [];
+      bonuses = [];
+      spawnObs = 0;
+      spawnBonus = 2;
+      speed = 140;
+      g.score = 0;
+      gameOverFlag = false;
+    };
+    function addObstacle() {
+      const w = 40 + Math.random() * 80;
+      const x = 20 + Math.random() * (W - 40 - w);
+      obstacles.push({ x, y: H + 30, w, h: 16 });
+    }
+    function addBonus() {
+      const x = 30 + Math.random() * (W - 60);
+      bonuses.push({ x, y: H + 30, r: 10 });
+    }
+    function endGame() {
+      if (!gameOverFlag) {
+        gameOverFlag = true;
+        paused = true;
+        statusEl.textContent = 'Game Over';
+        g.setBest(Math.max(g.best(), g.score));
+      }
+    }
+    g.update = dt => {
+      if (paused || gameOverFlag) return;
+      if (keys.has('ArrowLeft') || keys.has('KeyA')) player.x -= 260 * dt;
+      if (keys.has('ArrowRight') || keys.has('KeyD')) player.x += 260 * dt;
+      player.x = Math.max(16, Math.min(W - 16, player.x));
+      speed += dt * 12;
+      spawnObs -= dt;
+      spawnBonus -= dt;
+      if (spawnObs <= 0) {
+        addObstacle();
+        spawnObs = Math.max(0.35, 0.9 - g.score * 0.01);
+      }
+      if (spawnBonus <= 0) {
+        addBonus();
+        spawnBonus = 3 + Math.random() * 2;
+      }
+      const scroll = speed * dt;
+      obstacles.forEach(o => {
+        o.y -= scroll;
+      });
+      bonuses.forEach(b => {
+        b.y -= scroll;
+      });
+      obstacles = obstacles.filter(o => o.y + o.h > -40);
+      bonuses = bonuses.filter(b => b.y + b.r > -40);
+      obstacles.forEach(o => {
+        const cx = player.x;
+        const cy = player.y;
+        const rx1 = o.x;
+        const ry1 = o.y;
+        const rx2 = o.x + o.w;
+        const ry2 = o.y + o.h;
+        const nx = Math.max(rx1, Math.min(cx, rx2));
+        const ny = Math.max(ry1, Math.min(cy, ry2));
+        const dx = cx - nx;
+        const dy = cy - ny;
+        if (dx * dx + dy * dy < player.r * player.r) {
+          endGame();
+        }
+      });
+      bonuses.forEach(b => {
+        if (!b.collected) {
+          const dx = player.x - b.x;
+          const dy = player.y - b.y;
+          if (dx * dx + dy * dy < (player.r + b.r) * (player.r + b.r)) {
+            b.collected = true;
+            g.score += 10;
+          }
+        }
+      });
+      g.score += dt * 3;
+    };
+    g.draw = () => {
+      clearBG();
+      const title = 'ENDLESS FREE FALL — Ultra 3D RTX';
+      neonText(title, (cvs.width / DPR) / 2, 26, 18);
+      ctx.save();
+      const Wc = cvs.width / DPR;
+      const Hc = cvs.height / DPR;
+      ctx.strokeStyle = 'rgba(90,240,255,0.25)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 14; i++) {
+        const y = (i * Hc / 14);
+        line(0, y, Wc, y, 'rgba(90,240,255,0.16)');
+      }
+      ctx.restore();
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,255,255,0.9)';
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = 'rgba(230,246,255,0.97)';
+      ctx.beginPath();
+      ctx.arc(Math.floor(player.x) + 0.5, Math.floor(player.y) + 0.5, player.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      obstacles.forEach(o => {
+        neonRect(o.x, o.y, o.w, o.h, 'rgba(255,60,90,0.9)', 'rgba(40,0,16,0.95)');
+      });
+      bonuses.forEach(b => {
+        if (!b.collected) {
+          ctx.save();
+          ctx.shadowColor = 'rgba(255,180,80,0.95)';
+          ctx.shadowBlur = 16;
+          ctx.fillStyle = 'rgba(255,180,80,0.98)';
+          ctx.beginPath();
+          ctx.arc(Math.floor(b.x) + 0.5, Math.floor(b.y) + 0.5, b.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      });
+    };
+    g.action = () => { paused = false; };
+    return g;
+  })();
+
+  // ===== 30) Endless 2D Hill Racing Game =====
+  const hillracing = (() => {
+    const g = makeBase(); g.bestKey = 'best_hillracing';
+    let W, H, car, terrain, segW, scroll, gravity, gameOverFlag;
+    g.init = () => {
+      W = cvs.width / DPR;
+      H = cvs.height / DPR;
+      segW = 40;
+      terrain = [];
+      let x = 0;
+      let y = H * 0.65;
+      for (let i = 0; i < 40; i++) {
+        terrain.push({ x, y });
+        x += segW;
+        y += (Math.random() - 0.5) * 26;
+        y = Math.max(H * 0.45, Math.min(H * 0.8, y));
+      }
+      car = { x: W * 0.3, y: terrainHeightAt(W * 0.3) - 16, vx: 0, vy: 0, angle: 0 };
+      scroll = 0;
+      gravity = 520;
+      g.score = 0;
+      gameOverFlag = false;
+    };
+    function terrainHeightAt(px) {
+      if (terrain.length < 2) return H * 0.7;
+      const total = terrain[terrain.length - 1].x - terrain[0].x;
+      let localX = px + scroll + segW;
+      while (localX > terrain[terrain.length - 1].x - segW) {
+        extendTerrain();
+      }
+      let i = Math.floor(localX / segW);
+      i = Math.max(0, Math.min(terrain.length - 2, i));
+      const p1 = terrain[i];
+      const p2 = terrain[i + 1];
+      const t = (localX - p1.x) / (p2.x - p1.x);
+      return p1.y + (p2.y - p1.y) * t;
+    }
+    function terrainAngleAt(px) {
+      const total = terrain[terrain.length - 1].x - terrain[0].x;
+      let localX = px + scroll + segW;
+      let i = Math.floor(localX / segW);
+      i = Math.max(0, Math.min(terrain.length - 2, i));
+      const p1 = terrain[i];
+      const p2 = terrain[i + 1];
+      return Math.atan2(p2.y - p1.y, p2.x - p1.x);
+    }
+    function extendTerrain() {
+      const last = terrain[terrain.length - 1];
+      let x = last.x + segW;
+      let y = last.y + (Math.random() - 0.5) * 26;
+      y = Math.max(H * 0.45, Math.min(H * 0.8, y));
+      terrain.push({ x, y });
+      if (terrain.length > 60) terrain.shift();
+    }
+    function endGame() {
+      if (!gameOverFlag) {
+        gameOverFlag = true;
+        paused = true;
+        statusEl.textContent = 'Game Over';
+        g.setBest(Math.max(g.best(), g.score));
+      }
+    }
+    g.update = dt => {
+      if (paused || gameOverFlag) return;
+      if (keys.has('ArrowRight') || keys.has('KeyD')) car.vx += 120 * dt;
+      if (keys.has('ArrowLeft') || keys.has('KeyA')) car.vx -= 120 * dt;
+      car.vx = Math.max(40, Math.min(220, car.vx));
+      scroll += car.vx * dt;
+      car.vy += gravity * dt;
+      car.y += car.vy * dt;
+      const groundY = terrainHeightAt(car.x);
+      if (car.y > groundY - 16) {
+        car.y = groundY - 16;
+        car.vy = -car.vy * 0.25;
+        if (Math.abs(car.vy) < 24) car.vy = 0;
+      }
+      const ang = terrainAngleAt(car.x);
+      const tilt = (keys.has('ArrowUp') || keys.has('KeyW')) ? -0.02 : (keys.has('ArrowDown') || keys.has('KeyS')) ? 0.02 : 0;
+      car.angle += (ang - car.angle) * 0.15 + tilt;
+      if (Math.abs(car.angle) > Math.PI * 0.7) {
+        endGame();
+      }
+      g.score += dt * (car.vx * 0.05);
+    };
+    g.draw = () => {
+      clearBG();
+      const title = 'ENDLESS HILL RACING — Ultra 3D RTX';
+      neonText(title, (cvs.width / DPR) / 2, 26, 18);
+      const baseY = H;
+      ctx.save();
+      ctx.beginPath();
+      let first = true;
+      terrain.forEach(p => {
+        const sx = p.x - scroll;
+        const sy = p.y;
+        if (sx < -80 || sx > W + 80) return;
+        if (first) {
+          ctx.moveTo(sx, sy);
+          first = false;
+        } else {
+          ctx.lineTo(sx, sy);
+        }
+      });
+      ctx.lineTo(W + 40, baseY + 40);
+      ctx.lineTo(-40, baseY + 40);
+      ctx.closePath();
+      const grd = ctx.createLinearGradient(0, H * 0.4, 0, H);
+      grd.addColorStop(0, 'rgba(0,40,60,0.8)');
+      grd.addColorStop(1, 'rgba(0,10,20,1)');
+      ctx.fillStyle = grd;
+      ctx.fill();
+      ctx.restore();
+      ctx.save();
+      ctx.strokeStyle = 'rgba(90,240,255,0.9)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      first = true;
+      terrain.forEach(p => {
+        const sx = p.x - scroll;
+        const sy = p.y;
+        if (sx < -40 || sx > W + 40) return;
+        if (first) {
+          ctx.moveTo(sx, sy);
+          first = false;
+        } else {
+          ctx.lineTo(sx, sy);
+        }
+      });
+      ctx.stroke();
+      ctx.restore();
+      const cx = car.x;
+      const cy = car.y;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(car.angle);
+      neonRect(-20, -10, 40, 20, 'rgba(255,123,240,0.95)', 'rgba(255,123,240,0.98)');
+      ctx.save();
+      ctx.shadowColor = 'rgba(230,246,255,0.9)';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = 'rgba(230,246,255,0.98)';
+      ctx.beginPath();
+      ctx.arc(-12, 12, 7, 0, Math.PI * 2);
+      ctx.arc(12, 12, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.restore();
+    };
+    g.action = () => { paused = false; };
+    return g;
+  })();
   
   // Switcher
   const games = { snake, breakout, invaders, pong, flappy, dino, doodle, pacman, commander, mario, excitecar, dkong, dkjr, dk3,
-     wrecking, tetris, drmario, yoshi, ycookie, bubbleshooter, blockpuzzle, endlessmatch, memorysounds, endlessmemory, galaxy, dotsconnect, pipemania };
+     wrecking, tetris, drmario, yoshi, ycookie, bubbleshooter, blockpuzzle, endlessmatch, memorysounds, endlessmemory, galaxy, dotsconnect, pipemania, endlesscatch,
+  freefall,
+  hillracing };
   let current = games[document.getElementById('gamePicker').value];
   function switchGame(name){
     current = games[name]; current.reset(); updateHUD();
