@@ -1975,4 +1975,9 @@
   Object.values(games).forEach(g=>g.reset());
   current.reset();
   requestAnimationFrame(loop);
+  // Memastikan game pertama (Snake) langsung terdeteksi
+document.addEventListener('DOMContentLoaded', () => {
+    enforceAspect();
+    switchGame(gamePicker.value);
+});
 })();
