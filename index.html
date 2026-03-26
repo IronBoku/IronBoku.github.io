@@ -280,7 +280,7 @@
   </footer>
 
   <!-- Minimal JS untuk partikel & tilt -->
-  <script src="games.js"></script>
+  
   <script>
     // Partikel sederhana
     const canvas = document.getElementById('particles');
@@ -331,5 +331,20 @@
       });
     });
   </script>
+
+  <script src="games.js"></script>
+<script>
+  // Tambahkan trigger ini agar game langsung inisialisasi setelah halaman siap
+  window.onload = () => {
+    if (typeof enforceAspect === "function") enforceAspect();
+    // Memastikan game pertama yang terpilih di dropdown langsung aktif
+    const picker = document.getElementById('gamePicker');
+    if (picker) {
+       // Trigger ganti game secara manual saat startup
+       const event = new Event('change');
+       picker.dispatchEvent(event);
+    }
+  };
+</script>
 </body>
 </html>
