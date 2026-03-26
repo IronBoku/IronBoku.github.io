@@ -279,72 +279,916 @@
     </div>
   </footer>
 
-  <!-- Minimal JS untuk partikel & tilt -->
-  
-  <script>
-    // Partikel sederhana
-    const canvas = document.getElementById('particles');
-    const ctx = canvas.getContext('2d');
-    let w, h, particles;
-
-    function resize() {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
-      particles = Array.from({ length: 120 }, () => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        r: Math.random() * 1.6 + 0.4,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: (Math.random() - 0.5) * 0.6
-      }));
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    function draw() {
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = 'rgba(140, 255, 255, 0.9)';
-      particles.forEach(p => {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      requestAnimationFrame(draw);
-    }
-    draw();
-
-    // Tilt 3D hover
-    document.querySelectorAll('.tilt').forEach(card => {
-      card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const rx = ((y / rect.height) - 0.5) * -8;
-        const ry = ((x / rect.width) - 0.5) * 8;
-        card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) translateZ(8px)`;
-      });
-      card.addEventListener('mouseleave', () => {
-        card.style.transform = 'rotateX(0) rotateY(0) translateZ(0)';
-      });
-    });
-  </script>
-
-  <script src="games.js"></script>
 <script>
-  // Tambahkan trigger ini agar game langsung inisialisasi setelah halaman siap
-  window.onload = () => {
-    if (typeof enforceAspect === "function") enforceAspect();
-    // Memastikan game pertama yang terpilih di dropdown langsung aktif
-    const picker = document.getElementById('gamePicker');
-    if (picker) {
-       // Trigger ganti game secara manual saat startup
-       const event = new Event('change');
-       picker.dispatchEvent(event);
+(() => {
+  const cvs = document.getElementById('arc');
+  const ctx = cvs.getContext('2d');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const statusEl = document.getElementById('status');
+  const gamePicker = document.getElementById('gamePicker');
+
+  let paused = false;
+  const DPR = window.devicePixelRatio || 1;
+
+  // 1. Inisialisasi Canvas (RTX Sharpness)
+  function initCanvas() {
+    const rect = cvs.getBoundingClientRect();
+    cvs.width = 960 * DPR;
+    cvs.height = 540 * DPR;
+    ctx.scale(DPR, DPR);
+  }
+  window.addEventListener('resize', initCanvas);
+  initCanvas();
+
+  // 2. Helper: Efek Latar Belakang Digital (Grid & Glow)
+  function drawRTXBackground() {
+    ctx.fillStyle = '#050a10';
+    ctx.fillRect(0, 0, 960, 540);
+    ctx.strokeStyle = 'rgba(0, 242, 255, 0.05)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 960; i += 40) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 540); ctx.stroke();
+    }
+    for (let i = 0; i < 540; i += 40) {
+      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(960, i); ctx.stroke();
+    }
+  }
+
+  // --- GAME 1: GOOGLE SNAKE (ULTRA 3D RTX) ---
+  const snake = {
+    score: 0, best: localStorage.getItem('s_best') || 0,
+    body: [], dir: {x:1, y:0}, nextDir: {x:1, y:0}, food: {x:5, y:5},
+    reset() {
+      this.score = 0;
+      this.body = [{x:10, y:10}, {x:9, y:10}, {x:8, y:10}];
+      this.dir = {x:1, y:0}; this.nextDir = {x:1, y:0};
+      this.spawnFood();
+    },
+    spawnFood() {
+      this.food = { x: Math.floor(Math.random()*31), y: Math.floor(Math.random()*17) };
+    },
+    update() {
+      this.dir = this.nextDir;
+      const head = { x: this.body[0].x + this.dir.x, y: this.body[0].y + this.dir.y };
+      if (head.x < 0 || head.x >= 32 || head.y < 0 || head.y >= 18 || this.body.some(b=>b.x===head.x && b.y===head.y)) return this.reset();
+      this.body.unshift(head);
+      if (head.x === this.food.x && head.y === this.food.y) {
+        this.score += 10; this.spawnFood();
+        if(this.score > this.best) { this.best = this.score; localStorage.setItem('s_best', this.best); }
+      } else { this.body.pop(); }
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.shadowBlur = 15; ctx.shadowColor = '#00f2ff';
+      ctx.fillStyle = '#00f2ff';
+      this.body.forEach(b => ctx.fillRect(b.x*30+1, b.y*30+1, 28, 28));
+      ctx.fillStyle = '#ff0055'; ctx.shadowColor = '#ff0055';
+      ctx.fillRect(this.food.x*30+2, this.food.y*30+2, 26, 26);
+      ctx.shadowBlur = 0;
     }
   };
+
+  // --- GAME 2: BREAKOUT (ULTRA 3D RTX) ---
+  const breakout = {
+    score: 0, best: localStorage.getItem('b_best') || 0,
+    ball: {x:480, y:300, dx:4, dy:-4}, paddle: {x:420, w:120}, bricks: [],
+    reset() {
+      this.score = 0; this.ball = {x:480, y:300, dx:4, dy:-4}; this.paddle.x = 420;
+      this.bricks = [];
+      for(let r=0; r<5; r++) for(let c=0; c<10; c++) this.bricks.push({x: c*90+35, y: r*30+50, active: true});
+    },
+    update() {
+      this.ball.x += this.ball.dx; this.ball.y += this.ball.dy;
+      if(this.ball.x < 10 || this.ball.x > 950) this.ball.dx *= -1;
+      if(this.ball.y < 10) this.ball.dy *= -1;
+      if(this.ball.y > 510 && this.ball.x > this.paddle.x && this.ball.x < this.paddle.x + this.paddle.w) this.ball.dy = -5;
+      if(this.ball.y > 540) this.reset();
+      this.bricks.forEach(b => {
+        if(b.active && this.ball.x > b.x && this.ball.x < b.x+80 && this.ball.y > b.y && this.ball.y < b.y+20) {
+          b.active = false; this.ball.dy *= -1; this.score += 20;
+        }
+      });
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.shadowBlur = 15; ctx.shadowColor = '#ff7bf0';
+      ctx.fillStyle = '#ff7bf0';
+      this.bricks.forEach(b => { if(b.active) ctx.fillRect(b.x, b.y, 80, 20); });
+      ctx.fillStyle = '#00f2ff'; ctx.shadowColor = '#00f2ff';
+      ctx.fillRect(this.paddle.x, 520, this.paddle.w, 15);
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(this.ball.x, this.ball.y, 8, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  };
+
+  // --- GAME 3: SPACE INVADERS (ULTRA 3D RTX) ---
+  const invaders = {
+    score: 0, best: localStorage.getItem('i_best') || 0,
+    player: {x:450}, bullets: [], aliens: [], dir: 1,
+    reset() {
+      this.score = 0; this.aliens = []; this.bullets = [];
+      for(let i=0; i<30; i++) this.aliens.push({x: (i%10)*70+100, y: Math.floor(i/10)*50+50, alive: true});
+    },
+    update() {
+      this.bullets.forEach((b,i) => {
+        b.y -= 8; if(b.y < 0) this.bullets.splice(i,1);
+        this.aliens.forEach(a => {
+          if(a.alive && b.x > a.x && b.x < a.x+40 && b.y > a.y && b.y < a.y+30) {
+            a.alive = false; this.bullets.splice(i,1); this.score += 50;
+          }
+        });
+      });
+      let moveDown = false;
+      this.aliens.forEach(a => { if(a.alive) { a.x += this.dir*2; if(a.x > 900 || a.x < 50) moveDown = true; } });
+      if(moveDown) { this.dir *= -1; this.aliens.forEach(a => a.y += 10); }
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.shadowBlur = 15; ctx.shadowColor = '#6effb4';
+      ctx.fillStyle = '#6effb4';
+      this.aliens.forEach(a => { if(a.alive) ctx.fillRect(a.x, a.y, 40, 30); });
+      ctx.fillStyle = '#00f2ff'; ctx.shadowColor = '#00f2ff';
+      ctx.fillRect(this.player.x, 490, 60, 20);
+      ctx.fillStyle = '#fff'; this.bullets.forEach(b => ctx.fillRect(b.x, b.y, 4, 15));
+      ctx.shadowBlur = 0;
+    }
+  };
+
+  // --- GAME 4: PONG VS CPU (ULTRA 3D RTX) ---
+  const pong = {
+    score: 0, best: localStorage.getItem('p_best') || 0,
+    ball: {x:480, y:270, dx:5, dy:5}, p1: 220, p2: 220,
+    reset() { this.score = 0; this.ball = {x:480, y:270, dx:5, dy:5}; },
+    update() {
+      this.ball.x += this.ball.dx; this.ball.y += this.ball.dy;
+      if(this.ball.y < 0 || this.ball.y > 530) this.ball.dy *= -1;
+      // AI CPU
+      this.p2 += (this.ball.y - (this.p2 + 40)) * 0.1;
+      if(this.ball.x < 40 && this.ball.y > this.p1 && this.ball.y < this.p1+100) { this.ball.dx = 6; this.score++; }
+      if(this.ball.x > 910 && this.ball.y > this.p2 && this.ball.y < this.p2+100) this.ball.dx = -6;
+      if(this.ball.x < 0 || this.ball.x > 960) this.reset();
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.shadowBlur = 20; ctx.shadowColor = '#00f2ff';
+      ctx.fillStyle = '#00f2ff';
+      ctx.fillRect(20, this.p1, 15, 100);
+      ctx.shadowColor = '#ff0055'; ctx.fillStyle = '#ff0055';
+      ctx.fillRect(925, this.p2, 15, 100);
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(this.ball.x, this.ball.y, 10, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  };
+
+// --- GAME 5: FLAPPY BIRD (RTX) ---
+  const flappy = {
+    score: 0, best: localStorage.getItem('f_best') || 0,
+    bird: { y: 250, v: 0 }, pipes: [], frame: 0,
+    reset() { this.score = 0; this.bird = { y: 250, v: 0 }; this.pipes = []; this.frame = 0; },
+    update() {
+      this.bird.v += 0.25; this.bird.y += this.bird.v;
+      if (this.frame % 90 === 0) this.pipes.push({ x: 960, h: Math.random() * 200 + 100 });
+      this.pipes.forEach((p, i) => {
+        p.x -= 3;
+        if (p.x < -60) this.pipes.splice(i, 1);
+        if (p.x < 80 && p.x > 20 && (this.bird.y < p.h || this.bird.y > p.h + 140)) this.reset();
+        if (p.x === 21) { this.score++; if(this.score > this.best) this.best = this.score; }
+      });
+      if (this.bird.y > 540 || this.bird.y < 0) this.reset();
+      this.frame++;
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.shadowBlur = 15; ctx.shadowColor = '#ffeb3b'; ctx.fillStyle = '#ffeb3b';
+      ctx.fillRect(50, this.bird.y, 30, 30); // Bird
+      ctx.shadowColor = '#4caf50'; ctx.fillStyle = '#4caf50';
+      this.pipes.forEach(p => {
+        ctx.fillRect(p.x, 0, 50, p.h); ctx.fillRect(p.x, p.h + 140, 50, 540);
+      });
+      ctx.shadowBlur = 0;
+    }
+  };
+
+  // --- GAME 6: GOOGLE DINOSAUR (RTX) ---
+  const dino = {
+    score: 0, best: localStorage.getItem('d_best') || 0,
+    y: 450, v: 0, obs: [], frame: 0, grounded: true,
+    reset() { this.score = 0; this.y = 450; this.v = 0; this.obs = []; this.frame = 0; },
+    update() {
+      if (!this.grounded) { this.v += 0.6; this.y += this.v; }
+      if (this.y >= 450) { this.y = 450; this.v = 0; this.grounded = true; }
+      if (this.frame % 100 === 0) this.obs.push({ x: 960, w: 20 + Math.random() * 30 });
+      this.obs.forEach((o, i) => {
+        o.x -= 6;
+        if (o.x < -50) { this.obs.splice(i, 1); this.score++; }
+        if (o.x < 100 && o.x > 50 && this.y > 410) this.reset();
+      });
+      this.frame++;
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.strokeStyle = '#5af0ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 480); ctx.lineTo(960, 480); ctx.stroke();
+      ctx.shadowBlur = 15; ctx.shadowColor = '#fff'; ctx.fillStyle = '#fff';
+      ctx.fillRect(60, this.y - 30, 40, 40); // Dino
+      ctx.shadowColor = '#ff0055'; ctx.fillStyle = '#ff0055';
+      this.obs.forEach(o => ctx.fillRect(o.x, 440, o.w, 40));
+      ctx.shadowBlur = 0;
+    }
+  };
+
+  // --- GAME 7: DOODLE JUMP (RTX) ---
+  const doodle = {
+    score: 0, best: localStorage.getItem('do_best') || 0,
+    p: { x: 480, y: 300, v: 0 }, platforms: [],
+    reset() {
+      this.score = 0; this.p = { x: 480, y: 300, v: 0 };
+      this.platforms = [];
+      for (let i = 0; i < 6; i++) this.platforms.push({ x: Math.random() * 800, y: i * 100 });
+    },
+    update() {
+      this.p.v += 0.2; this.p.y += this.p.v;
+      if (this.p.v > 0) {
+        this.platforms.forEach(pl => {
+          if (this.p.x + 30 > pl.x && this.p.x < pl.x + 100 && this.p.y + 40 > pl.y && this.p.y + 40 < pl.y + 20) {
+            this.p.v = -10; this.score++;
+          }
+        });
+      }
+      if (this.p.y < 200) {
+        let diff = 200 - this.p.y; this.p.y = 200;
+        this.platforms.forEach(pl => {
+          pl.y += diff;
+          if (pl.y > 540) { pl.y = 0; pl.x = Math.random() * 800; }
+        });
+      }
+      if (this.p.y > 540) this.reset();
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.shadowBlur = 15; ctx.shadowColor = '#6effb4'; ctx.fillStyle = '#6effb4';
+      this.platforms.forEach(pl => ctx.fillRect(pl.x, pl.y, 100, 15));
+      ctx.shadowColor = '#ff7bf0'; ctx.fillStyle = '#ff7bf0';
+      ctx.fillRect(this.p.x, this.p.y, 30, 40);
+      ctx.shadowBlur = 0;
+    }
+  };
+
+  // --- GAME 8: PAC-MAN (RTX SIMPLIFIED) ---
+  const pacman = {
+    score: 0, best: localStorage.getItem('pa_best') || 0,
+    x: 480, y: 270, dir: { x: 0, y: 0 }, dots: [], ghosts: [],
+    reset() {
+      this.score = 0; this.x = 480; this.y = 270; this.dots = [];
+      for (let i = 0; i < 50; i++) this.dots.push({ x: Math.random() * 900 + 30, y: Math.random() * 500 + 20 });
+      this.ghosts = [{ x: 100, y: 100, dx: 2, dy: 2 }, { x: 800, y: 400, dx: -2, dy: 2 }];
+    },
+    update() {
+      this.x += this.dir.x * 4; this.y += this.dir.y * 4;
+      this.dots.forEach((d, i) => {
+        if (Math.hypot(this.x - d.x, this.y - d.y) < 20) { this.dots.splice(i, 1); this.score += 10; }
+      });
+      this.ghosts.forEach(g => {
+        g.x += g.dx; g.y += g.dy;
+        if (g.x < 0 || g.x > 940) g.dx *= -1; if (g.y < 0 || g.y > 520) g.dy *= -1;
+        if (Math.hypot(this.x - g.x, this.y - g.y) < 30) this.reset();
+      });
+      if (this.dots.length === 0) this.reset();
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.shadowBlur = 15; ctx.shadowColor = '#ffff00'; ctx.fillStyle = '#ffff00';
+      ctx.beginPath(); ctx.arc(this.x, this.y, 20, 0.2 * Math.PI, 1.8 * Math.PI); ctx.lineTo(this.x, this.y); ctx.fill();
+      ctx.shadowColor = '#fff'; ctx.fillStyle = '#fff';
+      this.dots.forEach(d => { ctx.beginPath(); ctx.arc(d.x, d.y, 4, 0, 7); ctx.fill(); });
+      ctx.shadowColor = '#ff0000'; ctx.fillStyle = '#ff0000';
+      this.ghosts.forEach(g => ctx.fillRect(g.x, g.y, 30, 30));
+      ctx.shadowBlur = 0;
+    }
+  };
+
+  // --- GAME 9: OCEAN COMMANDER (RTX) ---
+  const commander = {
+    score: 0, best: localStorage.getItem('oc_best') || 0,
+    p: { x: 480, y: 450 }, bullets: [], enemies: [],
+    reset() { this.score = 0; this.enemies = []; this.bullets = []; },
+    update() {
+      if (Math.random() < 0.05) this.enemies.push({ x: Math.random() * 900, y: -50 });
+      this.bullets.forEach((b, i) => {
+        b.y -= 10; if (b.y < 0) this.bullets.splice(i, 1);
+        this.enemies.forEach((e, j) => {
+          if (Math.hypot(b.x - e.x, b.y - e.y) < 30) {
+            this.bullets.splice(i, 1); this.enemies.splice(j, 1); this.score += 100;
+          }
+        });
+      });
+      this.enemies.forEach((e, i) => {
+        e.y += 3; if (e.y > 540) this.reset();
+        if (Math.hypot(this.p.x - e.x, this.p.y - e.y) < 40) this.reset();
+      });
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.shadowBlur = 20; ctx.shadowColor = '#00f2ff'; ctx.fillStyle = '#00f2ff';
+      ctx.beginPath(); ctx.moveTo(this.p.x, this.p.y - 20); ctx.lineTo(this.p.x - 20, this.p.y + 20); ctx.lineTo(this.p.x + 20, this.p.y + 20); ctx.fill();
+      ctx.shadowColor = '#ff0055'; ctx.fillStyle = '#ff0055';
+      this.bullets.forEach(b => ctx.fillRect(b.x - 2, b.y, 4, 10));
+      ctx.shadowColor = '#ff7bf0'; ctx.fillStyle = '#ff7bf0';
+      this.enemies.forEach(e => { ctx.beginPath(); ctx.arc(e.x, e.y, 20, 0, 7); ctx.fill(); });
+      ctx.shadowBlur = 0;
+    }
+  };
+// --- GAME 10: MARIO BROS ARCADE (RTX) ---
+  const mario = {
+    score: 0, best: localStorage.getItem('m_best') || 0,
+    p: { x: 480, y: 440, vx: 0, vy: 0, grounded: true }, platforms: [], enemies: [],
+    reset() {
+      this.score = 0; this.p = { x: 480, y: 440, vx: 0, vy: 0, grounded: true };
+      this.enemies = [];
+      this.platforms = [
+        { x: 0, y: 480, w: 960 }, { x: 100, y: 350, w: 300 }, 
+        { x: 560, y: 350, w: 300 }, { x: 300, y: 220, w: 360 }
+      ];
+    },
+    update() {
+      // Gravitasi & Gerak
+      this.p.vy += 0.8; this.p.y += this.p.vy; this.p.x += this.p.vx;
+      this.p.grounded = false;
+      this.platforms.forEach(pl => {
+        if (this.p.x + 20 > pl.x && this.p.x < pl.x + pl.w && this.p.y + 30 > pl.y && this.p.y + 30 < pl.y + 10 && this.p.vy >= 0) {
+          this.p.y = pl.y - 30; this.p.vy = 0; this.p.grounded = true;
+        }
+      });
+      if (Math.random() < 0.02) this.enemies.push({ x: Math.random() < 0.5 ? 0 : 960, y: 180, dx: 2 });
+      this.enemies.forEach((e, i) => {
+        e.x += e.dx; if (e.x < 0 || e.x > 940) e.dx *= -1;
+        if (Math.hypot(this.p.x - e.x, this.p.y - e.y) < 30) this.reset();
+      });
+      if (this.p.y > 540) this.reset();
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.shadowBlur = 15; ctx.shadowColor = '#00f2ff'; ctx.fillStyle = '#00f2ff';
+      this.platforms.forEach(pl => ctx.fillRect(pl.x, pl.y, pl.w, 10));
+      ctx.shadowColor = '#ff0000'; ctx.fillStyle = '#ff0000';
+      ctx.fillRect(this.p.x, this.p.y, 25, 30); // Mario Neon
+      ctx.shadowColor = '#6effb4'; ctx.fillStyle = '#6effb4';
+      this.enemies.forEach(e => ctx.fillRect(e.x, e.y, 25, 25));
+      ctx.shadowBlur = 0;
+    }
+  };
+
+  // --- GAME 11: EXITECAR (RTX) ---
+  const excitecar = {
+    score: 0, best: localStorage.getItem('ex_best') || 0,
+    carX: 450, enemies: [], frame: 0,
+    reset() { this.score = 0; this.carX = 450; this.enemies = []; this.frame = 0; },
+    update() {
+      this.frame++; if (this.frame % 40 === 0) this.enemies.push({ x: Math.random() * 800 + 50, y: -100 });
+      this.enemies.forEach((e, i) => {
+        e.y += 7;
+        if (e.y > 540) { this.enemies.splice(i, 1); this.score += 10; }
+        if (Math.hypot(this.carX - e.x, 500 - e.y) < 40) this.reset();
+      });
+    },
+    draw() {
+      drawRTXBackground();
+      // Jalan Raya RTX
+      ctx.strokeStyle = 'rgba(0, 242, 255, 0.2)'; ctx.setLineDash([20, 20]);
+      ctx.beginPath(); ctx.moveTo(300, 0); ctx.lineTo(300, 540); ctx.moveTo(660, 0); ctx.lineTo(660, 540); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.shadowBlur = 20; ctx.shadowColor = '#ff7bf0'; ctx.fillStyle = '#ff7bf0';
+      ctx.fillRect(this.carX, 480, 40, 50); // Player Car
+      ctx.shadowColor = '#fff'; ctx.fillStyle = '#fff';
+      this.enemies.forEach(e => ctx.fillRect(e.x, e.y, 40, 50));
+      ctx.shadowBlur = 0;
+    }
+  };
+
+  // --- GAME 12: DONKEY KONG (RTX) ---
+  const dkong = {
+    score: 0, best: localStorage.getItem('dk_best') || 0,
+    p: { x: 50, y: 450 }, barrels: [],
+    reset() { this.score = 0; this.p = { x: 50, y: 450 }; this.barrels = []; },
+    update() {
+      if (Math.random() < 0.03) this.barrels.push({ x: 800, y: 150, dx: -4 });
+      this.barrels.forEach((b, i) => {
+        b.x += b.dx;
+        if (b.x < 0) this.barrels.splice(i, 1);
+        if (Math.hypot(this.p.x - b.x, this.p.y - b.y) < 30) this.reset();
+      });
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.fillStyle = '#ff0055'; ctx.fillRect(0, 480, 960, 20); // Floor
+      ctx.fillRect(100, 350, 860, 20); ctx.fillRect(0, 220, 860, 20); // Ladders/Platforms
+      ctx.shadowBlur = 15; ctx.shadowColor = '#ffeb3b'; ctx.fillStyle = '#ffeb3b';
+      this.barrels.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, 15, 0, 7); ctx.fill(); });
+      ctx.fillStyle = '#00f2ff'; ctx.fillRect(this.p.x, this.p.y, 25, 30); // Jumpman
+      ctx.shadowBlur = 0;
+    }
+  };
+
+  // --- GAME 13 & 14: DK JR & DK 3 (Simplified Logic) ---
+  const dkjr = { ...dkong, reset() { this.score=0; this.p={x:480,y:450}; }, draw() { dkong.draw.call(this); ctx.fillText("JR MODE", 450, 50); }};
+  const dk3 = { ...dkong, update() { if(Math.random()<0.05) this.score++; }, draw() { dkong.draw.call(this); ctx.fillText("DK 3 SHOOTER", 450, 50); }};
+// --- GAME 15: WRECKING CREW (RTX) ---
+  const wrecking = {
+    score: 0, p: { x: 450, y: 440 }, walls: [],
+    reset() {
+      this.score = 0; this.p = { x: 450, y: 440 }; this.walls = [];
+      for(let i=0; i<15; i++) this.walls.push({ x: Math.random()*800+50, y: Math.random()*400+50, a: true });
+    },
+    update() {
+      this.walls.forEach(w => {
+        if(w.a && Math.hypot(this.p.x - w.x, this.p.y - w.y) < 40) { w.a = false; this.score += 50; }
+      });
+      if(!this.walls.some(w => w.a)) this.reset();
+    },
+    draw() {
+      drawRTXBackground(); ctx.shadowBlur = 15;
+      this.walls.forEach(w => { if(w.a) { ctx.shadowColor = '#ff7bf0'; ctx.fillStyle = '#ff7bf0'; ctx.fillRect(w.x, w.y, 40, 40); }});
+      ctx.shadowColor = '#fff'; ctx.fillStyle = '#fff'; ctx.fillRect(this.p.x, this.p.y, 30, 40);
+    }
+  };
+
+// --- GAME 16: TETRIS (RTX VERSION) ---
+  const tetris = {
+    score: 0, 
+    board: Array(20).fill(0).map(() => Array(10).fill(0)),
+    pos: {x: 4, y: 0},
+    piece: [[1,1,1,1]], // I-Piece sederhana
+    timer: 0,
+    reset() {
+      this.score = 0;
+      this.board = Array(20).fill(0).map(() => Array(10).fill(0));
+      this.pos = {x: 4, y: 0};
+    },
+// TAMBAHKAN FUNGSI INI:
+    rotate() {
+      const matrix = this.piece;
+      const N = matrix.length;
+      const rotated = matrix[0].map((_, i) => matrix.map(row => row[i]).reverse());
+      
+      const prevPiece = this.piece;
+      this.piece = rotated;
+      
+      // Jika setelah diputar malah menabrak dinding, batalkan rotasi
+      if (this.collide()) {
+        this.piece = prevPiece;
+      }
+    },
+    move(dir) {
+      this.pos.x += dir;
+      if (this.collide()) this.pos.x -= dir;
+    },
+    drop() {
+      this.pos.y++;
+      if (this.collide()) {
+        this.pos.y--;
+        this.merge();
+        this.pos = {x: 4, y: 0};
+        if (this.collide()) this.reset();
+      }
+      this.timer = 0;
+    },
+    collide() {
+      for (let y = 0; y < this.piece.length; y++) {
+        for (let x = 0; x < this.piece[y].length; x++) {
+          if (this.piece[y][x] && (this.board[y + this.pos.y] === undefined || 
+              this.board[y + this.pos.y][x + this.pos.x] === undefined || 
+              this.board[y + this.pos.y][x + this.pos.x])) return true;
+        }
+      }
+      return false;
+    },
+    merge() {
+      this.piece.forEach((row, y) => {
+        row.forEach((val, x) => {
+          if (val) this.board[y + this.pos.y][x + this.pos.x] = 1;
+        });
+      });
+      this.score += 10;
+    },
+    update() {
+      this.timer++;
+      if (this.timer > 30) this.drop();
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.translate(330, 40); // Pindahkan ke tengah canvas
+      // Draw Board
+      ctx.strokeStyle = 'rgba(0,242,255,0.1)';
+      this.board.forEach((row, y) => {
+        row.forEach((val, x) => {
+          ctx.strokeRect(x * 25, y * 25, 25, 25);
+          if (val) {
+            ctx.fillStyle = '#00f2ff';
+            ctx.fillRect(x * 25, y * 25, 23, 23);
+          }
+        });
+      });
+      // Draw Active Piece
+      ctx.fillStyle = '#ff7bf0';
+      ctx.shadowBlur = 10; ctx.shadowColor = '#ff7bf0';
+      this.piece.forEach((row, y) => {
+        row.forEach((val, x) => {
+          if (val) ctx.fillRect((x + this.pos.x) * 25, (y + this.pos.y) * 25, 23, 23);
+        });
+      });
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0); // Reset transform agar tidak merusak game lain
+    }
+  };
+    
+
+
+  // --- GAME 17: DR. MARIO (RTX) ---
+  const drmario = {
+    score: 0, pill: { x: 480, y: 50 }, viruses: [],
+    reset() {
+      this.score = 0; this.viruses = [];
+      for(let i=0; i<5; i++) this.viruses.push({ x: Math.random()*300+330, y: Math.random()*300+200, c: i%3 });
+    },
+    update() {
+      this.pill.y += 2; if(this.pill.y > 500) this.pill.y = 50;
+      this.viruses.forEach((v, i) => {
+        if(Math.hypot(this.pill.x - v.x, this.pill.y - v.y) < 30) { this.viruses.splice(i, 1); this.score += 100; }
+      });
+    },
+    draw() {
+      drawRTXBackground();
+      this.viruses.forEach(v => {
+        ctx.fillStyle = v.c==0?'#ff0055':v.c==1?'#ffff00':'#00f2ff';
+        ctx.beginPath(); ctx.arc(v.x, v.y, 15, 0, 7); ctx.fill();
+      });
+      ctx.fillStyle = '#fff'; ctx.fillRect(this.pill.x-20, this.pill.y, 40, 20);
+    }
+  };
+
+  // --- GAME 18 & 19: YOSHI & YOSHI COOKIE ---
+  const yoshi = { ...drmario, draw() { drmario.draw.call(this); ctx.fillStyle="#6effb4"; ctx.fillText("YOSHI EGGS", 450, 50); }};
+  const ycookie = { ...drmario, draw() { drmario.draw.call(this); ctx.fillStyle="#ff7bf0"; ctx.fillText("YOSHI COOKIE", 450, 50); }};
+
+// --- GAME 20: BUBBLE SHOOTER (RTX) ---
+  const bubbleshooter = {
+    score: 0, shooter: { x: 480, angle: 0 }, bubbles: [], bullet: null,
+    reset() {
+      this.score = 0; this.bubbles = [];
+      for(let i=0; i<30; i++) this.bubbles.push({ x: (i%10)*80+120, y: Math.floor(i/10)*60+60, c: Math.floor(Math.random()*3) });
+    },
+    update() {
+      if(this.bullet) {
+        this.bullet.x += Math.cos(this.bullet.a) * 8;
+        this.bullet.y += Math.sin(this.bullet.a) * 8;
+        this.bubbles.forEach((b, i) => {
+          if(Math.hypot(this.bullet.x - b.x, this.bullet.y - b.y) < 30) {
+            this.bubbles.splice(i, 1); this.bullet = null; this.score += 20;
+          }
+        });
+        if(this.bullet && (this.bullet.y < 0 || this.bullet.x < 0 || this.bullet.x > 960)) this.bullet = null;
+      }
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.shadowBlur = 15;
+      this.bubbles.forEach(b => {
+        ctx.shadowColor = b.c==0?'#ff0055':b.c==1?'#00f2ff':'#ffff00';
+        ctx.fillStyle = ctx.shadowColor;
+        ctx.beginPath(); ctx.arc(b.x, b.y, 25, 0, 7); ctx.fill();
+      });
+      if(this.bullet) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(this.bullet.x, this.bullet.y, 10, 0, 7); ctx.fill(); }
+      ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.moveTo(480, 500); 
+      ctx.lineTo(480 + Math.cos(this.shooter.angle)*50, 500 + Math.sin(this.shooter.angle)*50); ctx.stroke();
+    }
+  };
+
+  // --- GAME 21: BLOCK PUZZLE (RTX) ---
+  const blockpuzzle = {
+    score: 0, grid: Array(8).fill(0).map(() => Array(8).fill(0)),
+    reset() { this.score = 0; this.grid.forEach(r => r.fill(0)); },
+    update() {},
+    draw() {
+      drawRTXBackground();
+      ctx.translate(380, 70);
+      for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
+        ctx.strokeStyle = 'rgba(0,242,255,0.2)'; ctx.strokeRect(c*50, r*50, 50, 50);
+        if(Math.random() > 0.9) { ctx.fillStyle = '#ff7bf0'; ctx.fillRect(c*50+5, r*50+5, 40, 40); }
+      }
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+  };
+
+  // --- GAME 22: ENDLESS MATCH-3 ---
+  const endlessmatch = { ...blockpuzzle, draw() { blockpuzzle.draw.call(this); ctx.fillText("MATCH 3 MODE", 450, 40); }};
+
+  // --- GAME 23: MEMORY SOUNDS (SIMON) ---
+  const memorysounds = {
+    score: 0, sequence: [], userIdx: 0, activeBox: -1,
+    reset() { this.score = 0; this.sequence = [Math.floor(Math.random()*4)]; this.userIdx = 0; },
+    update() {},
+    draw() {
+      drawRTXBackground();
+      const colors = ['#ff0055', '#00f2ff', '#ffff00', '#6effb4'];
+      for(let i=0; i<4; i++) {
+        ctx.globalAlpha = (this.activeBox === i) ? 1 : 0.3;
+        ctx.fillStyle = colors[i];
+        ctx.fillRect(i*200+100, 170, 180, 180);
+      }
+      ctx.globalAlpha = 1;
+    }
+  };
+
+  // --- GAME 24: ENDLESS MEMORY CARD ---
+  const endlessmemory = { ...memorysounds, draw() { memorysounds.draw.call(this); ctx.fillText("CARD MEMORY", 450, 40); }};
+
+// --- GAME 25: GALAXY SHOOTER (RTX) ---
+  const galaxy = {
+    score: 0, p: { x: 480 }, stars: [], enemies: [], bullets: [],
+    reset() {
+      this.score = 0; this.stars = []; this.enemies = []; this.bullets = [];
+      for(let i=0; i<50; i++) this.stars.push({x: Math.random()*960, y: Math.random()*540, s: Math.random()*2});
+    },
+    update() {
+      this.stars.forEach(s => { s.y += 2; if(s.y > 540) s.y = 0; });
+      if(Math.random() < 0.05) this.enemies.push({x: Math.random()*900, y: -50});
+      this.bullets.forEach((b, i) => {
+        b.y -= 10;
+        this.enemies.forEach((e, j) => {
+          if(Math.hypot(b.x-e.x, b.y-e.y) < 30) { this.enemies.splice(j,1); this.bullets.splice(i,1); this.score += 50; }
+        });
+      });
+      this.enemies.forEach(e => { e.y += 4; if(e.y > 540) this.reset(); });
+    },
+    draw() {
+      drawRTXBackground();
+      ctx.fillStyle = '#fff'; this.stars.forEach(s => ctx.fillRect(s.x, s.y, s.s, s.s));
+      ctx.shadowBlur = 15; ctx.shadowColor = '#00f2ff'; ctx.fillStyle = '#00f2ff';
+      ctx.fillRect(this.p.x-20, 480, 40, 20); // Ship
+      ctx.shadowColor = '#ff0055'; ctx.fillStyle = '#ff0055';
+      this.enemies.forEach(e => ctx.beginPath() || ctx.arc(e.x, e.y, 15, 0, 7) || ctx.fill());
+      this.bullets.forEach(b => ctx.fillRect(b.x-2, b.y, 4, 10));
+    }
+  };
+
+  // --- GAME 26: DOTS CONNECT ---
+  const dotsconnect = {
+    score: 0, dots: [],
+    reset() { this.score = 0; this.dots = Array.from({length: 10}, () => ({x: Math.random()*800+80, y: Math.random()*400+70})); },
+    update() {},
+    draw() {
+      drawRTXBackground(); ctx.strokeStyle = '#6effb4'; ctx.lineWidth = 2;
+      ctx.beginPath(); this.dots.forEach((d, i) => i==0 ? ctx.moveTo(d.x, d.y) : ctx.lineTo(d.x, d.y)); ctx.stroke();
+      this.dots.forEach(d => { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(d.x, d.y, 8, 0, 7); ctx.fill(); });
+    }
+  };
+
+  // --- GAME 27: PIPE MANIA (RTX) ---
+  const pipemania = {
+    score: 0, pipes: Array(6).fill(0).map(() => Array(10).fill(0)),
+    reset() { this.score = 0; this.pipes.forEach(r => r.fill(0)); },
+    update() {},
+    draw() {
+      drawRTXBackground(); ctx.translate(180, 100);
+      for(let r=0; r<6; r++) for(let c=0; c<10; c++) {
+        ctx.strokeStyle = '#00f2ff'; ctx.strokeRect(c*60, r*60, 60, 60);
+        ctx.fillStyle = '#00f2ff'; ctx.fillRect(c*60+25, r*60, 10, 60); // Pipe dummy
+      }
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+  };
+
+  // --- GAME 28: ENDLESS CATCH ---
+  const endlesscatch = {
+    score: 0, p: { x: 480 }, items: [],
+    reset() { this.score = 0; this.items = []; },
+    update() {
+      if(Math.random() < 0.03) this.items.push({x: Math.random()*900, y: -20});
+      this.items.forEach((it, i) => {
+        it.y += 5;
+        if(it.y > 480 && Math.abs(it.x - this.p.x) < 50) { this.items.splice(i, 1); this.score += 10; }
+        if(it.y > 540) this.reset();
+      });
+    },
+    draw() {
+      drawRTXBackground(); ctx.fillStyle = '#ffff00'; ctx.fillRect(this.p.x-50, 500, 100, 20);
+      ctx.fillStyle = '#6effb4'; this.items.forEach(it => ctx.beginPath() || ctx.arc(it.x, it.y, 10, 0, 7) || ctx.fill());
+    }
+  };
+
+  // --- GAME 29: FREEFALL (RTX) ---
+  const freefall = {
+    score: 0, p: { x: 480, y: 100 }, obstacles: [],
+    reset() { this.score = 0; this.obstacles = []; },
+    update() {
+      if(Math.random() < 0.05) this.obstacles.push({x: Math.random()*900, y: 540});
+      this.obstacles.forEach((o, i) => {
+        o.y -= 4;
+        if(Math.hypot(this.p.x - o.x, this.p.y - o.y) < 30) this.reset();
+        if(o.y < -20) { this.obstacles.splice(i, 1); this.score++; }
+      });
+    },
+    draw() {
+      drawRTXBackground(); ctx.fillStyle = '#ff7bf0'; ctx.beginPath(); ctx.arc(this.p.x, this.p.y, 15, 0, 7); ctx.fill();
+      ctx.fillStyle = '#fff'; this.obstacles.forEach(o => ctx.fillRect(o.x, o.y, 60, 20));
+    }
+  };
+
+  // --- GAME 30: HILL RACING (RTX) ---
+  const hillracing = {
+    score: 0, carY: 400, offset: 0,
+    reset() { this.score = 0; this.offset = 0; },
+    update() { this.offset += 5; this.score = Math.floor(this.offset/10); },
+    draw() {
+      drawRTXBackground();
+      ctx.beginPath(); ctx.strokeStyle = '#00f2ff'; ctx.lineWidth = 4;
+      for(let x=0; x<960; x+=10) {
+        let y = 400 + Math.sin((x + this.offset)*0.01) * 50;
+        x==0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.fillStyle = '#ff0055'; ctx.fillRect(200, 350 + Math.sin((200 + this.offset)*0.01)*50, 40, 20); // Car
+    }
+  };
+
+  // --- SYSTEM SWITCHER & CONTROLS ---
+const games = { 
+    snake, breakout, invaders, pong, flappy, dino, doodle, pacman, commander, // 1-9
+    mario, excitecar, dkong, dkjr, dk3,                                      // 10-14
+    wrecking, tetris, drmario, yoshi, ycookie,                               // 15-19
+    bubbleshooter, blockpuzzle, endlessmatch, memorysounds, endlessmemory,   // 20-24
+    galaxy, dotsconnect, pipemania, endlesscatch, freefall, hillracing       // 25-30
+  };
+  let current = games.snake;
+  current.reset();
+
+  gamePicker.addEventListener('change', (e) => {
+    if(games[e.target.value]) { current = games[e.target.value]; current.reset(); }
+  });
+
+  window.addEventListener('keydown', e => {
+    const k = e.key;
+    // Snake
+    if(current === snake) {
+      if(k==='ArrowUp' && snake.dir.y===0) snake.nextDir={x:0,y:-1};
+      if(k==='ArrowDown' && snake.dir.y===0) snake.nextDir={x:0,y:1};
+      if(k==='ArrowLeft' && snake.dir.x===0) snake.nextDir={x:-1,y:0};
+      if(k==='ArrowRight' && snake.dir.x===0) snake.nextDir={x:1,y:0};
+    }
+    // Breakout & Pong
+    if(k==='ArrowLeft') { breakout.paddle.x -= 40; invaders.player.x -= 20; }
+    if(k==='ArrowRight') { breakout.paddle.x += 40; invaders.player.x += 20; }
+    if(k==='ArrowUp') pong.p1 -= 30;
+    if(k==='ArrowDown') pong.p1 += 30;
+    // Space Invaders Shoot
+    if(e.code==='Space' && current === invaders) invaders.bullets.push({x: invaders.player.x+28, y: 480});
+    if(k==='p' || k==='P') paused = !paused;
+
+if (k === 'ArrowUp' || k === 'w' || k === ' ') {
+      if (current === flappy) flappy.bird.v = -6;
+      if (current === dino && dino.grounded) { dino.v = -15; dino.grounded = false; }
+      if (current === commander) commander.bullets.push({ x: commander.p.x, y: commander.p.y });
+    }
+    if (k === 'ArrowLeft' || k === 'a') {
+      if (current === doodle) doodle.p.x -= 30;
+      if (current === pacman) pacman.dir = { x: -1, y: 0 };
+      if (current === commander) commander.p.x -= 20;
+    }
+    if (k === 'ArrowRight' || k === 'd') {
+      if (current === doodle) doodle.p.x += 30;
+      if (current === pacman) pacman.dir = { x: 1, y: 0 };
+      if (current === commander) commander.p.x += 20;
+    }
+    if (k === 'ArrowDown' || k === 's') {
+      if (current === pacman) pacman.dir = { x: 0, y: 1 };
+    }
+
+// Mario & Donkey Kong Movement
+    if (k === 'ArrowLeft' || k === 'a') {
+      if (current === mario) mario.p.vx = -5;
+      if (current === excitecar) excitecar.carX -= 30;
+      if (current === dkong || current === dkjr) dkong.p.x -= 20;
+    }
+    if (k === 'ArrowRight' || k === 'd') {
+      if (current === mario) mario.p.vx = 5;
+      if (current === excitecar) excitecar.carX += 30;
+      if (current === dkong || current === dkjr) dkong.p.x += 20;
+    }
+    if (k === 'ArrowUp' || k === 'w') {
+      if (current === mario && mario.p.grounded) { mario.p.vy = -15; mario.p.grounded = false; }
+      if (current === dkong || current === dkjr) dkong.p.y -= 20;
+    }
+    // Hentikan gerak Mario saat tombol dilepas
+    window.addEventListener('keyup', e => {
+      if (current === mario) mario.p.vx = 0;
+    });
+// Kontrol Tambahan Part 4
+    if(k==='ArrowLeft' || k==='a') {
+      if(current === wrecking) wrecking.p.x -= 20;
+      if(current === drmario || current === yoshi) drmario.pill.x -= 30;
+    }
+    if(k==='ArrowRight' || k==='d') {
+      if(current === wrecking) wrecking.p.x += 20;
+      if(current === drmario || current === yoshi) drmario.pill.x += 30;
+    }
+    if(k==='ArrowUp' || k==='w') {
+      if(current === wrecking) wrecking.p.y -= 20;
+    }
+    if(k==='ArrowDown' || k==='s') {
+      if(current === wrecking) wrecking.p.y += 20;
+    }
+// Tambahkan ini di dalam blok kontrol KIRI
+    if(k==='ArrowLeft' || k==='a') {
+      if(current === tetris) tetris.move(-1);
+      // ... kontrol game lain ...
+    }
+
+    // Tambahkan ini di dalam blok kontrol KANAN
+    if(k==='ArrowRight' || k==='d') {
+      if(current === tetris) tetris.move(1);
+      // ... kontrol game lain ...
+    }
+
+    // Tambahkan ini di dalam blok kontrol BAWAH
+    if(k==='ArrowDown' || k==='s') {
+      if(current === tetris) tetris.drop();
+      // ... kontrol game lain ...
+    }
+// Kontrol Atas / Lompat / ROTATE
+    if(k==='ArrowUp' || k==='w') {
+      // KHUSUS TETRIS: Panah atas untuk memutar balok
+      if(current === tetris) {
+        tetris.rotate();
+      } 
+      // Game lain tetap dengan logika lompat/naik mereka
+      else {
+        if(current === pong) pong.p1 -= 30;
+        if(current === pacman) pacman.dir = {x:0, y:-1};
+        if(current === flappy) flappy.bird.v = -6;
+        if(current === dino && dino.grounded) { dino.v = -15; dino.grounded = false; }
+        if(current === mario && mario.p.grounded) { mario.p.vy = -15; mario.p.grounded = false; }
+      }
+    }
+
+
+// Kontrol Part 5
+    if(k==='ArrowLeft' || k==='a') {
+      if(current === bubbleshooter) bubbleshooter.shooter.angle -= 0.1;
+    }
+    if(k==='ArrowRight' || k==='d') {
+      if(current === bubbleshooter) bubbleshooter.shooter.angle += 0.1;
+    }
+    if(k==='ArrowUp' || k==='w' || k===' ') {
+      if(current === bubbleshooter && !bubbleshooter.bullet) {
+        bubbleshooter.bullet = { x: 480, y: 500, a: bubbleshooter.shooter.angle };
+      }
+      if(current === memorysounds) { // Simulasi klik simon
+        memorysounds.activeBox = Math.floor(Math.random()*4);
+        setTimeout(() => memorysounds.activeBox = -1, 200);
+      }
+    }
+
+
+// Kontrol Terakhir (Part 6)
+    if(k==='ArrowLeft' || k==='a') {
+      if(current === galaxy) galaxy.p.x -= 20;
+      if(current === endlesscatch) endlesscatch.p.x -= 30;
+      if(current === freefall) freefall.p.x -= 20;
+    }
+    if(k==='ArrowRight' || k==='d') {
+      if(current === galaxy) galaxy.p.x += 20;
+      if(current === endlesscatch) endlesscatch.p.x += 30;
+      if(current === freefall) freefall.p.x += 20;
+    }
+    if(e.code==='Space') {
+      if(current === galaxy) galaxy.bullets.push({x: galaxy.p.x, y: 480});
+    }
+  });
+
+
+  function gameLoop() {
+    if(!paused) {
+      // Pembatas FPS (Kecepatan Snake berbeda)
+      if(current === snake) {
+        snake._t = (snake._t || 0) + 1;
+        if(snake._t % 6 === 0) current.update();
+      } else {
+        current.update();
+      }
+    }
+    current.draw();
+    scoreEl.textContent = current.score;
+    bestEl.textContent = current.best;
+    statusEl.textContent = paused ? "PAUSED" : "ACTIVE";
+    requestAnimationFrame(gameLoop);
+  }
+
+  gameLoop();
+  document.getElementById('restartBtn').onclick = () => current.reset();
+  document.getElementById('pauseBtn').onclick = () => paused = !paused;
+})();
 </script>
+
+
+
 </body>
 </html>
