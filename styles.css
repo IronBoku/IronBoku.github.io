@@ -331,3 +331,86 @@ input:focus, textarea:focus, .picker:focus {
     0 20px 60px -20px var(--shadow),
     0 0 32px rgba(90, 240, 255, 0.15);
 }
+
+/* Container Utama Kontroler */
+#mobile-controls {
+
+  bottom: 25px;       /* Jarak tetap dari bawah layar */
+  right: 25px;        /* Jarak tetap dari kanan layar */
+  z-index: 9999;      /* Memastikan di atas segala elemen (Canvas, Header, dll) */
+  display: block;
+  transition: all 0.3s ease;
+  user-select: none;
+  touch-action: none; /* Mencegah layar goyang saat pencet tombol cepat */
+}
+
+/* Sembunyikan jika mode OFF */
+#mobile-controls.hidden {
+  display: none;
+}
+
+/* Layout D-Pad */
+.control-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2); /* Background tipis agar tombol terlihat jelas */
+  padding: 10px;
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+/* Desain Tombol RTX */
+.btn-rtx {
+  width: 65px;
+  height: 65px;
+  background: rgba(10, 25, 40, 0.7);
+  border: 2px solid rgba(0, 242, 255, 0.4);
+  border-radius: 50%;
+  color: #00f2ff;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+}
+
+.btn-rtx:active {
+  background: rgba(0, 242, 255, 0.3);
+  transform: scale(0.9);
+  box-shadow: 0 0 20px #00f2ff;
+}
+
+/* Tombol Action (Warna Beda) */
+#btn-action {
+  border-color: #ff0055;
+  color: #ff0055;
+  box-shadow: 0 0 10px rgba(255, 0, 85, 0.2);
+}
+
+#btn-action:active {
+  background: rgba(255, 0, 85, 0.3);
+  box-shadow: 0 0 20px #ff0055;
+}
+
+/* Tombol Toggle (Pojok Kanan Atas Screen) */
+#toggle-ctrl {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 10000;
+  padding: 8px 15px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #00f2ff;
+  border: 1px solid #00f2ff;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+}
