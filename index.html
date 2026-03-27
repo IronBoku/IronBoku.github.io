@@ -208,12 +208,69 @@
       </header>
 
       <main class="stage glass">
-        <canvas id="arc" width="960" height="540" aria-label="Arcade canvas"></canvas>
-        <div class="hud">
+        <div class="arcade-window" style="position: relative; display: flex; flex-direction: column; align-items: center;">
+  
+		  <canvas id="arc"></canvas>
+		  <div class="hud">
           <div class="stat"><strong>Skor:</strong> <span id="score">0</span></div>
           <div class="stat"><strong>Best:</strong> <span id="best">0</span></div>
           <div class="stat"><strong>Status:</strong> <span id="status">Main</span></div>
         </div>
+
+		  <div id="mobile-controls" style="margin-top: 20px; width: 100%; display: flex; justify-content: space-between; align-items: flex-end; user-select: none; padding: 0 20px;">
+  
+			  <div style="display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 20px; border: 1px solid var(--accent); backdrop-filter: blur(5px);">
+				<span style="color: var(--accent); font-size: 10px; margin-bottom: 5px; font-family: 'Orbitron';">ACTION</span>
+				<button class="v-btn" style="border-color: var(--accent); color: var(--accent); width: 205px; height: 205px;" 
+						onmousedown="vKey(' ',true)" onmouseup="vKey(' ',false)" 
+						ontouchstart="vKey(' ',true)" ontouchend="vKey(' ',false)">
+				  <span style="font-size: 14px;">JUMP/FIRE</span>
+				</button>
+			  </div>
+
+			  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 20px; border: 1px solid var(--primary); backdrop-filter: blur(5px);">
+				
+				<button class="v-btn" onmousedown="vKey('ArrowUp',true)" onmouseup="vKey('ArrowUp',false)" ontouchstart="vKey('ArrowUp',true)" ontouchend="vKey('ArrowUp',false)">▲</button>
+				
+				<div style="display: flex; gap: 10px;">
+				  <button class="v-btn" onmousedown="vKey('ArrowLeft',true)" onmouseup="vKey('ArrowLeft',false)" ontouchstart="vKey('ArrowLeft',true)" ontouchend="vKey('ArrowLeft',false)">◀</button>
+				  
+				  <button class="v-btn" style="border-width: 1px; opacity: 0.5; ">OK</button>
+				  
+				  <button class="v-btn" onmousedown="vKey('ArrowRight',true)" onmouseup="vKey('ArrowRight',false)" ontouchstart="vKey('ArrowRight',true)" ontouchend="vKey('ArrowRight',false)">▶</button>
+				</div>
+				
+				<button class="v-btn" onmousedown="vKey('ArrowDown',true)" onmouseup="vKey('ArrowDown',false)" ontouchstart="vKey('ArrowDown',true)" ontouchend="vKey('ArrowDown',false)">▼</button>
+			  </div>
+			  
+			</div>
+		</div>
+
+		<style>
+		  .v-btn {
+			width: 70px; 
+			height: 70px; 
+			background: var(--surface); 
+			border: 2px solid var(--primary);
+			color: var(--primary); 
+			border-radius: 50%; 
+			font-size: 24px; 
+			display: flex; 
+			align-items: center; 
+			justify-content: center; 
+			cursor: pointer; 
+			touch-action: none;
+			transition: all 0.1s;
+		  }
+		  .v-btn:active { 
+			background: var(--primary); 
+			color: #000; 
+			transform: scale(0.9);
+			box-shadow: 0 0 20px var(--primary);
+		  }
+		</style>
+		
+        
         <div class="help">
           <p><strong>Kontrol umum:</strong> Panah/WASD, Space = aksi / start. P = pause.</p>
           <p><strong>Snake:</strong> Panah/WASD. <strong>Breakout:</strong> Panah kiri/kanan.</p>
@@ -994,21 +1051,102 @@
   };
 
   // --- GAME 30: HILL RACING (RTX) ---
-  const hillracing = {
-    score: 0, carY: 400, offset: 0,
-    reset() { this.score = 0; this.offset = 0; },
-    update() { this.offset += 5; this.score = Math.floor(this.offset/10); },
-    draw() {
+const hillracing = (() => {
+    const g = {
+      score: 0,
+      best: localStorage.getItem('hill_best') || 0,
+      offset: 0,
+      speed: 0, // Mulai dari 0 (berhenti)
+      rotation: 0, // Kemiringan mobil
+      isGameOver: false
+    };
+
+    g.reset = () => {
+      g.score = 0;
+      g.offset = 0;
+      g.speed = 0;
+      g.rotation = 0;
+      g.isGameOver = false;
+    };
+
+    g.update = () => {
+      if (g.isGameOver) return;
+
+      // Geser dunia berdasarkan kecepatan
+      g.offset += g.speed;
+      g.score = Math.floor(g.offset / 10);
+
+      // Friksi alami (kecepatan berkurang jika tidak digas)
+      g.speed *= 0.98;
+
+      // Logika Kemiringan Otomatis (Mengikuti gravitasi sedikit)
+      g.rotation *= 0.95; 
+
+      // Cek Kondisi Terbalik (Jika rotasi > 90 derajat atau < -90 derajat)
+      if (Math.abs(g.rotation) > Math.PI / 1.8) {
+        g.isGameOver = true;
+        setTimeout(() => g.reset(), 2000);
+      }
+
+      if (g.score > g.best) {
+        g.best = g.score;
+        localStorage.setItem('hill_best', g.best);
+      }
+    };
+
+    g.draw = () => {
       drawRTXBackground();
-      ctx.beginPath(); ctx.strokeStyle = '#00f2ff'; ctx.lineWidth = 4;
-      for(let x=0; x<960; x+=10) {
-        let y = 400 + Math.sin((x + this.offset)*0.01) * 50;
-        x==0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+
+      // Gambar Bukit
+      ctx.save();
+      ctx.beginPath();
+      ctx.lineWidth = 6;
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#00f2ff';
+      ctx.strokeStyle = '#00f2ff';
+
+      for (let x = 0; x <= 960; x += 10) {
+        const y = 420 + Math.sin((x + g.offset) * 0.015) * 40 + Math.cos((x + g.offset) * 0.005) * 20;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       }
       ctx.stroke();
-      ctx.fillStyle = '#ff0055'; ctx.fillRect(200, 350 + Math.sin((200 + this.offset)*0.01)*50, 40, 20); // Car
-    }
-  };
+      ctx.restore();
+
+      // Gambar Mobil
+      const carX = 200;
+      const groundY = 420 + Math.sin((carX + g.offset) * 0.015) * 40 + Math.cos((carX + g.offset) * 0.005) * 20;
+
+      ctx.save();
+      ctx.translate(carX, groundY - 15);
+      
+      // Rotasi berdasarkan input user
+      ctx.rotate(g.rotation);
+
+      if (g.isGameOver) {
+        ctx.fillStyle = '#ff0000';
+        ctx.fillText("CRASHED!", -20, -30);
+      }
+
+      // Body Mobil RTX
+      const grad = ctx.createLinearGradient(0, -20, 0, 0);
+      grad.addColorStop(0, '#ff7bf0');
+      grad.addColorStop(1, '#b02696');
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = '#ff7bf0';
+      ctx.fillStyle = grad;
+      ctx.fillRect(-25, -15, 50, 20);
+
+      // Roda
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(-15, 8, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(15, 8, 7, 0, Math.PI * 2); ctx.fill();
+      
+      ctx.restore();
+    };
+
+    return g;
+  })();
 
   // --- SYSTEM SWITCHER & CONTROLS ---
 const games = { 
@@ -1024,9 +1162,19 @@ const games = {
   gamePicker.addEventListener('change', (e) => {
     if(games[e.target.value]) { current = games[e.target.value]; current.reset(); }
   });
+  
+
 
   window.addEventListener('keydown', e => {
     const k = e.key;
+	
+	
+	// Daftar tombol yang ingin kita cegah fungsi defaultnya (biar tidak scroll)
+    const keysToBlock = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
+    if (keysToBlock.includes(k)) {
+      e.preventDefault();
+    }
+	
     // Snake
     if(current === snake) {
       if(k==='ArrowUp' && snake.dir.y===0) snake.nextDir={x:0,y:-1};
@@ -1162,6 +1310,29 @@ if (k === 'ArrowUp' || k === 'w' || k === ' ') {
     if(e.code==='Space') {
       if(current === galaxy) galaxy.bullets.push({x: galaxy.p.x, y: 480});
     }
+	
+	// Kontrol Hill Racing
+if (current === hillracing) {
+      // Panah Kanan: Akselerasi (Gas)
+      if (k === 'ArrowRight' || k === 'd') {
+        hillracing.speed += 0.5;
+        // Gas juga memberikan sedikit rotasi angkat depan (wheelie)
+        hillracing.rotation += 0.02; 
+      }
+      // Panah Kiri: Rem
+      if (k === 'ArrowLeft' || k === 'a') {
+        hillracing.speed -= 0.3;
+        hillracing.rotation -= 0.02;
+      }
+      // Panah Atas: Miringkan ke Belakang
+      if (k === 'ArrowUp' || k === 'w') {
+        hillracing.rotation -= 0.1;
+      }
+      // Panah Bawah: Miringkan ke Depan
+      if (k === 'ArrowDown' || k === 's') {
+        hillracing.rotation += 0.1;
+      }
+    }
   });
 
 
@@ -1186,7 +1357,170 @@ if (k === 'ArrowUp' || k === 'w' || k === ' ') {
   document.getElementById('restartBtn').onclick = () => current.reset();
   document.getElementById('pauseBtn').onclick = () => paused = !paused;
 })();
+
+
+
+
+
+// Mapping tombol mobile ke key keyboard
+// Letakkan kode ini di bagian paling bawah di dalam IIFE games.js
+const setupControls = () => {
+  const toggleBtn = document.getElementById('toggle-ctrl');
+  const ctrlPanel = document.getElementById('mobile-controls');
+  
+  if (toggleBtn && ctrlPanel) {
+    toggleBtn.onclick = (e) => {
+      e.preventDefault();
+      const isHidden = ctrlPanel.classList.toggle('hidden');
+      toggleBtn.textContent = isHidden ? "🎮 KONTROL: OFF" : "🎮 KONTROL: ON";
+      toggleBtn.style.color = isHidden ? "#ff0055" : "#00f2ff";
+      console.log("Toggle diklik, Hidden:", isHidden);
+    };
+  }
+
+  const btnMap = {
+    'btn-up': 'ArrowUp',
+    'btn-down': 'ArrowDown',
+    'btn-left': 'ArrowLeft',
+    'btn-right': 'ArrowRight',
+    'btn-action': ' '
+  };
+
+  Object.keys(btnMap).forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+
+    const key = btnMap[id];
+    
+    // Fungsi simulasi tekan tombol
+    const press = (type) => {
+      window.dispatchEvent(new KeyboardEvent(type, { 
+        key: key, 
+        code: key === ' ' ? 'Space' : key,
+        bubbles: true 
+      }));
+    };
+
+    // Event untuk Mouse
+    btn.onmousedown = (e) => { e.preventDefault(); press('keydown'); };
+    btn.onmouseup = (e) => { e.preventDefault(); press('keyup'); };
+    btn.onmouseleave = (e) => { e.preventDefault(); press('keyup'); };
+
+    // Event untuk Layar Sentuh (HP)
+    btn.ontouchstart = (e) => { e.preventDefault(); press('keydown'); };
+    btn.ontouchend = (e) => { e.preventDefault(); press('keyup'); };
+  });
+};
+
+// Jalankan fungsi setup
+setupControls();
+
+
+function switchGame(name) {
+    current = games[name];
+    current.reset();
+    updateHUD();
+    cvs.focus(); // Tambahkan ini
+    document.activeElement.blur(); // Tambahkan ini agar tidak nyangkut di dropdown
+  }
+  
+  
+  // --- FINAL CONTROLLER LOGIC ---
+  const initTouch = () => {
+    const map = {
+      'btn-up': 'ArrowUp',
+      'btn-down': 'ArrowDown',
+      'btn-left': 'ArrowLeft',
+      'btn-right': 'ArrowRight',
+      'btn-action': ' '
+    };
+
+    Object.keys(map).forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      const key = map[id];
+      const code = key === ' ' ? 'Space' : key;
+
+      const sendKey = (type) => {
+        window.dispatchEvent(new KeyboardEvent(type, {
+          key: key,
+          code: code,
+          bubbles: true, // WAJIB: agar event naik ke level window
+          cancelable: true
+        }));
+      };
+
+      // Mouse Events
+      el.onmousedown = (e) => { e.preventDefault(); sendKey('keydown'); };
+      el.onmouseup = (e) => { e.preventDefault(); sendKey('keyup'); };
+      el.onmouseleave = (e) => { sendKey('keyup'); };
+
+      // Touch Events (Mobile)
+      el.ontouchstart = (e) => { e.preventDefault(); sendKey('keydown'); };
+      el.ontouchend = (e) => { e.preventDefault(); sendKey('keyup'); };
+    });
+
+    // Toggle logic
+    const tgl = document.getElementById('toggle-ctrl');
+    const pnl = document.getElementById('mobile-controls');
+    if (tgl && pnl) {
+      tgl.onclick = () => {
+        const isOff = pnl.classList.toggle('hidden-ctrl');
+        tgl.textContent = isOff ? "🎮 CTRL: OFF" : "🎮 CTRL: ON";
+        tgl.style.borderColor = isOff ? "#ff7bf0" : "#5af0ff";
+        tgl.style.color = isOff ? "#ff7bf0" : "#5af0ff";
+        tgl.blur();
+      };
+    }
+  };
+
+  // Panggil setelah semua game terdefinisi
+  initTouch();
+  
+  
+  
+
+
+  // Fungsi untuk ON/OFF panel
+  function toggleVirtualPad() {
+    const pad = document.getElementById('mobile-controls');
+    const btn = document.getElementById('toggle-ctrl');
+    if (pad.style.display === 'none') {
+      pad.style.display = 'block';
+      btn.textContent = "🎮 CTRL: ON";
+      btn.style.color = "#5af0ff";
+    } else {
+      pad.style.display = 'none';
+      btn.textContent = "🎮 CTRL: OFF";
+      btn.style.color = "#ff7bf0";
+    }
+  }
+
+
+  function vKey(keyName, isDown) {
+    // 1. Buat event keyboard
+    const eventType = isDown ? 'keydown' : 'keyup';
+    const event = new KeyboardEvent(eventType, {
+      key: keyName,
+      code: keyName === ' ' ? 'Space' : keyName,
+      keyCode: keyName === ' ' ? 32 : (keyName === 'ArrowUp' ? 38 : (keyName === 'ArrowDown' ? 40 : (keyName === 'ArrowLeft' ? 37 : 39))),
+      which: keyName === ' ' ? 32 : 0,
+      bubbles: true,
+      cancelable: true
+    });
+	
+	
+
+    // 2. Kirim ke window agar didengar oleh games.js
+    window.dispatchEvent(event);
+    
+    // 3. Tambahan: Jika game butuh fokus canvas
+    const cvs = document.getElementById('arc');
+    if(cvs) cvs.focus();
+  }
 </script>
+
 
 
 
